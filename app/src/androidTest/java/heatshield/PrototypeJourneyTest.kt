@@ -3,9 +3,11 @@ package heatshield
 import android.content.Context
 import android.graphics.Bitmap
 import android.view.inputmethod.InputMethodManager
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
@@ -14,6 +16,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import heatshield.ui.PrototypeViewModel
 
 /**
  * Runs the real activity and navigates its public controls. Screenshots are genuine
@@ -37,48 +40,63 @@ class PrototypeJourneyTest {
         File(screenshots, "capture-manifest.csv").writeText("filename,captured_at_epoch_ms\n")
 
         // Password visibility is an explicit user control; sign-up shows correction.
-        compose.onNodeWithText("Welcome to HeatShield").assertIsDisplayed()
+        compose.onNodeWithText("Log in").assertIsDisplayed()
         capture("01_login.png")
         click("Forgot password?")
         compose.onNodeWithText("Password reset preview").assertIsDisplayed()
-        compose.onNodeWithText("This is the preview of reset password.")
+        compose.onNodeWithText("Password reset is not connected in this demo. No email will be sent.")
             .assertIsDisplayed()
         click("Dismiss", scroll = false)
         compose.onNodeWithText("Password reset preview").assertDoesNotExist()
+        replace("Password", "Shade before midday")
+        compose.onNodeWithTag("auth_password").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Password))
+        assertPasswordRendering(compose.onNodeWithTag("auth_password"), "Shade before midday", visible = false)
         compose.onNodeWithContentDescription("Show password").performScrollTo().performClick()
         compose.onNodeWithContentDescription("Hide password").assertIsDisplayed()
-        top("Welcome to HeatShield")
+        compose.onNodeWithTag("auth_password").assertTextContains("Shade before midday")
+        assertPasswordRendering(compose.onNodeWithTag("auth_password"), "Shade before midday", visible = true)
+        top()
         capture("17_password.png")
         compose.onNodeWithContentDescription("Hide password").performScrollTo().performClick()
-        click("New to HeatShield? Sign up")
-        val passwordCorrection = "Too short. Use at least 12 characters, such as a memorable phrase."
-        compose.onNodeWithText(passwordCorrection).assertDoesNotExist()
-        top("Start with your next shift")
+        assertPasswordRendering(compose.onNodeWithTag("auth_password"), "Shade before midday", visible = false)
+        click("Create account")
+        val passwordCorrection = "Use at least 12 characters."
+        val passwordError = SemanticsMatcher.keyIsDefined(SemanticsProperties.Error)
+        compose.onNodeWithTag("auth_password").assert(passwordError.not())
+        compose.onNodeWithTag("app_title").assertTextEquals("Create account")
+        top()
         capture("02_signup.png")
         replace("Password", "shade")
         compose.onNodeWithText(passwordCorrection).assertExists()
+        compose.onNodeWithTag("auth_password").assert(passwordError)
         compose.onNodeWithText("Create demo account").assertIsNotEnabled()
         replace("Password", "Shade before midday")
-        compose.onNodeWithText(passwordCorrection).assertDoesNotExist()
+        compose.onNodeWithTag("auth_password").assert(passwordError.not())
         compose.onNodeWithText("Create demo account").assertIsEnabled()
         click("Create demo account")
 
         // Both availability branches retain the same navigation and avoid fake data.
         bottomNav("Today")
-        compose.onNodeWithText("Time for a cooler pause").assertIsDisplayed()
+        compose.onNodeWithText("Check-in due").assertIsDisplayed()
         capture("03_today.png")
-        click("Preview unavailable data")
-        top("Make room for shade.")
-        compose.onNodeWithText("CONTEXT UNAVAILABLE").assertIsDisplayed()
-        compose.onNodeWithText("Forecast needs a refresh").assertIsDisplayed()
+        setConditionsUnavailable()
+        top()
+        compose.onNodeWithText("Conditions unavailable").assertIsDisplayed()
+        compose.onNodeWithText("Sample unavailable").assertExists()
         capture("16_unavailable.png")
-        click("Retry demo forecast")
-        compose.onNodeWithText("CONTEXT UNAVAILABLE").assertDoesNotExist()
+        click("Review")
+        click("Compare work windows")
+        compose.onNodeWithText("No comparison available").assertExists()
+        compose.onNodeWithText("Save preferred window").assertDoesNotExist()
+        capture("22_unavailable_plan.png")
+        click("Return to Today")
+        click("Retry forecast")
+        compose.onNodeWithText("Conditions unavailable").assertDoesNotExist()
 
         // Actual date/time/dropdown overlays, followed by a persisted plan choice.
         click("Review")
         bottomNav("Today")
-        compose.onNodeWithText("A better window for heavy work").assertIsDisplayed()
+        compose.onNodeWithTag("app_title").assertTextEquals("Shift plan")
         capture("04_plan.png")
         clickMatching(hasText("Work date ·", substring = true))
         compose.onNodeWithText("Apply date").assertIsDisplayed()
@@ -90,49 +108,54 @@ class PrototypeJourneyTest {
         capture("14_timepicker.png")
         click("Apply time", scroll = false)
         openChoice("Work type")
-        compose.onNodeWithText("Pruning").assertExists()
+        compose.onNodeWithText("Pruning").performScrollTo().assertIsDisplayed()
         capture("15_dropdown.png")
         choose("Pruning")
         compose.onNodeWithText("Pruning").assertExists()
         openChoice("Work type")
         choose("Planting beds")
         click("Compare work windows")
-        top("A better window for heavy work")
-        compose.onNodeWithText("Hourly air temperature").assertIsDisplayed()
-        reach(hasText("Higher forecast temperature and UV in this example.")).assertIsDisplayed()
+        top()
+        compose.onNodeWithText("Air temperature").assertIsDisplayed()
+        reach(hasText("24–27°C · UV 3–5")).assertIsDisplayed()
+        reach(hasText("31–34°C · UV 7–8")).assertIsDisplayed()
+        reach(hasText("Heavy effort or protective clothing makes a cooler work arrangement especially relevant.")).assertIsDisplayed()
         capture("12_compare.png")
+        reach(hasText("Save preferred window")).assertIsDisplayed()
+        capture("21_plan_decision.png")
         click("12:00–14:00")
         click("Save preferred window")
-        reach(hasText("Heavy work · 12:00–14:00")).assertIsDisplayed()
+        reach(hasText("Planting beds · 12:00–14:00")).assertIsDisplayed()
         // Restore the preferred window used in the initial screenshot set.
         click("Review")
         click("Compare work windows")
         click("08:00–10:00")
         click("Save preferred window")
-        reach(hasText("Heavy work · 08:00–10:00")).assertIsDisplayed()
+        reach(hasText("Planting beds · 08:00–10:00")).assertIsDisplayed()
 
         // Records, detail and edit share one entity rather than isolated mock screens.
-        tab("Records")
+        tab("Log")
         compose.onNodeWithText("6 sessions").assertExists()
         capture("05_records.png")
         click("Birrarung Marr · 12 Jan 2026")
-        bottomNav("Records")
+        bottomNav("Log")
         compose.onNodeWithText("Session detail").assertIsDisplayed()
         capture("06_detail.png")
         click("Edit record")
-        compose.onNodeWithText("Keep the record accurate").assertIsDisplayed()
+        compose.onNodeWithTag("app_title").assertTextEquals("Edit record")
         capture("07_edit.png")
         compose.onNodeWithContentDescription("Back").performClick()
         compose.onNodeWithContentDescription("Back").performClick()
-        bottomNav("Records")
+        bottomNav("Log")
         click("Search")
-        bottomNav("Records")
-        compose.onNodeWithText("Find a past session").assertIsDisplayed()
+        bottomNav("Log")
+        compose.onNodeWithTag("app_title").assertTextEquals("Search records")
         capture("08_search.png")
 
         // Text + status + task + date predicates are AND-combined, then reset.
         replace("Work type or site", "Birrarung")
         reach(hasText("4 results")).assertIsDisplayed()
+        clickMatching(hasText("Filters", substring = true))
         openChoice("Follow-up")
         choose("Needs review")
         reach(hasText("2 results")).assertIsDisplayed()
@@ -148,15 +171,15 @@ class PrototypeJourneyTest {
         reach(hasText("No matching sessions")).assertIsDisplayed()
         click("Reset")
         reach(hasText("6 results")).assertIsDisplayed()
-        openChoice("Sort results")
+        click("Newest first")
         choose("Longest outdoors")
-        compose.onAllNodes(hasText("Outdoor work") and hasText("Logged breaks") and hasClickAction())
-            .onFirst().assert(hasText("140 min"))
+        compose.onAllNodes(hasText("min outdoors", substring = true) and hasClickAction())
+            .onFirst().assert(hasText("140 min outdoors · 10 min breaks"))
         click("Birrarung Marr · 9 Jan 2026")
-        compose.onNodeWithText("140 min").assertExists()
+        compose.onNodeWithText("140").assertExists()
         compose.onNodeWithContentDescription("Back").performClick()
         compose.onNodeWithContentDescription("Back").performClick()
-        bottomNav("Records")
+        bottomNav("Log")
 
         // Charts derive from records and keep work minutes separate from break minutes.
         tab("Trends")
@@ -179,41 +202,43 @@ class PrototypeJourneyTest {
         tab("Today")
         click("Check in now")
         bottomNav("Today")
-        compose.onNodeWithText("What is possible right now?").assertIsDisplayed()
+        compose.onNodeWithText("Can you take a cooler pause?").assertIsDisplayed()
         capture("10_break.png")
         click("Cannot pause yet")
-        compose.onNodeWithText("Discuss a work adjustment").assertExists()
+        compose.onNodeWithText("Discuss a lighter task or a cooler location with your supervisor. Your follow-up will stay open.").assertExists()
         click("Record this response")
-        top("Your response is ready")
+        top()
         compose.onNodeWithText("Follow-up remains open").assertExists()
         capture("18_break_response.png")
         click("Return to Today")
-        compose.onNodeWithText("A task change may help").assertIsDisplayed()
+        compose.onNodeWithText("Follow-up needed").assertIsDisplayed()
         tab("Trends")
         totals(610, 95)
-        tab("Records")
+        tab("Log")
         click("Birrarung Marr · 12 Jan 2026")
-        reach(hasText("A work adjustment needs discussion. The follow-up remains open.")).assertIsDisplayed()
+        reach(hasText("Cannot pause yet. A work adjustment needs discussion. The follow-up remains open.")).assertIsDisplayed()
         compose.onNodeWithContentDescription("Back").performClick()
 
         tab("Profile")
         bottomNav("Profile")
-        compose.onNodeWithText("Your work context").assertIsDisplayed()
+        compose.onNodeWithText("Work preferences").assertIsDisplayed()
         capture("11_profile.png")
         val reminderSwitch = compose.onNodeWithContentDescription("Break check-in reminders")
         reminderSwitch.performScrollTo().assertIsOn().performClick().assertIsOff()
         reminderSwitch.performClick().assertIsOn()
-        click("Save preferences (demo)")
-        reach(hasText("Demo preferences saved")).assertIsDisplayed()
-        reach(hasText("These selections stay within this prototype screen.")).assertIsDisplayed()
+        click("Save demo preferences")
+        reach(hasText("Saved on this screen.")).assertIsDisplayed()
+        compose.onNodeWithTag("profile_site").assertTextContains("Birrarung Marr")
         capture("20_preferences.png")
 
         // CRUD runs after screenshots so submitted fixture captures stay coherent.
-        tab("Records")
+        tab("Log")
         click("Add record")
-        compose.onNodeWithText("Record a work session").assertIsDisplayed()
+        compose.onNodeWithTag("app_title").assertTextEquals("Add record")
         click("Add record")
         reach(hasText("Enter 1–960 minutes of outdoor work.")).assertIsDisplayed()
+        compose.onNodeWithTag("record_outdoor").assertIsFocused()
+        hideKeyboard()
         capture("19_form_error.png")
         replace("Outdoor work · required", "40")
         replace("Logged breaks · required", "10")
@@ -221,19 +246,19 @@ class PrototypeJourneyTest {
         compose.onNodeWithText("7 sessions").assertExists()
         tab("Trends")
         totals(650, 105)
-        tab("Records")
-        clickMatching(hasText("Planting beds") and hasText("40 min"))
+        tab("Log")
+        clickMatching(hasText("Planting beds") and hasText("40 min outdoors · 10 min breaks"))
         click("Edit record")
         replace("Outdoor work · required", "45")
         replace("Logged breaks · required", "12")
         click("Save changes")
-        compose.onNodeWithText("45 min").assertExists()
-        compose.onNodeWithText("12 min").assertExists()
+        compose.onNodeWithText("45").assertExists()
+        compose.onNodeWithText("12").assertExists()
         compose.onNodeWithContentDescription("Back").performClick()
         tab("Trends")
         totals(655, 107)
-        tab("Records")
-        clickMatching(hasText("Planting beds") and hasText("45 min"))
+        tab("Log")
+        clickMatching(hasText("Planting beds") and hasText("45 min outdoors · 12 min breaks"))
         click("Delete record")
         compose.onNodeWithText("Delete this record?").assertIsDisplayed()
         click("Keep record", scroll = false)
@@ -245,7 +270,7 @@ class PrototypeJourneyTest {
         compose.onNodeWithText("6 sessions").assertExists()
         tab("Trends")
         totals(610, 95)
-        assertEquals(20, File(screenshots, "capture-manifest.csv").readLines().size - 1)
+        assertEquals(22, File(screenshots, "capture-manifest.csv").readLines().size - 1)
     }
 
     private fun selectable(label: String): SemanticsMatcher =
@@ -258,7 +283,7 @@ class PrototypeJourneyTest {
     }
 
     private fun bottomNav(selected: String) {
-        listOf("Today", "Records", "Trends", "Profile").forEach {
+        listOf("Today", "Log", "Trends", "Profile").forEach {
             compose.onNode(selectable(it)).assertIsDisplayed()
         }
         compose.onNode(selectable(selected)).assertIsSelected()
@@ -273,8 +298,8 @@ class PrototypeJourneyTest {
         return compose.onNode(matcher).performScrollTo()
     }
 
-    private fun top(text: String) {
-        reach(hasText(text))
+    private fun top() {
+        compose.onNodeWithTag("page_content").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, -100_000f) }
         compose.waitForIdle()
     }
 
@@ -291,14 +316,26 @@ class PrototypeJourneyTest {
         compose.waitForIdle()
     }
 
+    /** Fixture setup only: the removed preview control is not a user workflow. */
+    private fun setConditionsUnavailable() {
+        compose.runOnUiThread {
+            ViewModelProvider(compose.activity)[PrototypeViewModel::class.java].contextUnavailable = true
+        }
+        compose.waitForIdle()
+    }
+
     private fun choose(option: String) {
         // Popup options occur after any equally labelled fields/cards underneath.
-        compose.onAllNodes(hasText(option) and hasClickAction()).onLast().performClick()
+        compose.onAllNodes(hasText(option) and hasClickAction()).onLast().performScrollTo().assertIsDisplayed().performClick()
         compose.waitForIdle()
     }
 
     private fun replace(label: String, value: String) {
         reach(hasText(label) and hasSetTextAction()).performTextReplacement(value)
+        hideKeyboard()
+    }
+
+    private fun hideKeyboard() {
         compose.runOnUiThread {
             val manager = compose.activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             manager.hideSoftInputFromWindow(compose.activity.window.decorView.windowToken, 0)
@@ -307,14 +344,26 @@ class PrototypeJourneyTest {
     }
 
     private fun totals(outdoor: Int, breaks: Int) {
-        top("Look back. Plan ahead.")
+        top()
         compose.onNodeWithText(outdoor.toString()).assertIsDisplayed()
         compose.onNodeWithText(breaks.toString()).assertIsDisplayed()
     }
 
     private fun capture(filename: String) {
         compose.waitForIdle()
-        Thread.sleep(200) // Allow platform popup/IME display animation to settle.
+        // Semantics can settle before RenderThread submits the new screen. Await
+        // an actual committed frame before presentation. Final images still need
+        // visual review because popups can use a separate platform surface.
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            val committed = java.util.concurrent.CountDownLatch(1)
+            compose.runOnUiThread {
+                val decor = compose.activity.window.decorView
+                decor.viewTreeObserver.registerFrameCommitCallback { committed.countDown() }
+                decor.invalidate()
+            }
+            assertTrue("Android frame was not committed for $filename", committed.await(5, java.util.concurrent.TimeUnit.SECONDS))
+        }
+        Thread.sleep(300) // Let the committed surface and platform popup become visible.
         val bitmap = requireNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
         File(screenshots, filename).outputStream().use {
             assertTrue("PNG capture failed: $filename", bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))

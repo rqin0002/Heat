@@ -3,35 +3,47 @@
 package heatshield.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
+
 class PrototypeViewModel : ViewModel() {
     val sessions = mutableStateListOf<DemoSession>().apply { addAll(initialSessions) }
     var acceptedWindow by mutableStateOf("08:00–10:00")
+    var preferredWorkContext by mutableStateOf(WorkContext())
     var checkInDone by mutableStateOf(false)
     var checkInDeferred by mutableStateOf(false)
+    var contextUnavailable by mutableStateOf(false)
+    var pauseConstraint by mutableStateOf("")
 }
 
 data class MainDestination(val route: String, val title: String, val icon: ImageVector)
 
 val mainDestinations = listOf(
     MainDestination("today", "Today", Icons.Outlined.WbSunny),
-    MainDestination("records", "Records", Icons.Outlined.ListAlt),
+    MainDestination("records", "Log", Icons.AutoMirrored.Outlined.ListAlt),
     MainDestination("trends", "Trends", Icons.Outlined.BarChart),
     MainDestination("profile", "Profile", Icons.Outlined.PersonOutline)
 )
 
 @Composable
 fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
+    val fontScale = LocalDensity.current.fontScale
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "login"
@@ -48,50 +60,74 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
         "trends" -> "Trends"; "profile" -> "Profile"; "break" -> "Break check-in"; else -> "HeatShield"
     }
     val isSecondary = !signedOut && mainDestinations.none { it.route == route }
+    val pageWidth = when (route) {
+        "login", "signup" -> 480.dp
+        "today", "records", "search", "trends" -> 840.dp
+        "break" -> 640.dp
+        else -> 720.dp
+    }
+
     fun enterDemo() {
         nav.navigate("today") { popUpTo("login") { inclusive = true }; launchSingleTop = true }
     }
     Scaffold(
         containerColor = Paper,
         topBar = {
-            TopAppBar(
-                title = { Text(title, style = MaterialTheme.typography.titleLarge) },
-                navigationIcon = {
-                    if (isSecondary || route == "signup") IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Outlined.ArrowBack,
-                            "Back"
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                TopAppBar(
+                    modifier = Modifier.widthIn(max = pageWidth).fillMaxWidth(),
+                    title = {
+                        Text(
+                            title,
+                            Modifier.testTag("app_title").semantics { heading() },
+                            style = MaterialTheme.typography.titleLarge
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Paper)
-            )
+                    },
+                    expandedHeight = 64.dp * fontScale.coerceIn(1f, 2f),
+                    navigationIcon = {
+                        if (isSecondary || route == "signup") IconButton(onClick = { nav.popBackStack() }) {
+                            Icon(
+                                Icons.AutoMirrored.Outlined.ArrowBack,
+                                "Back"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Paper)
+                )
+            }
         },
         bottomBar = {
-            if (!signedOut) Column {
+            if (!signedOut) Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
                 HorizontalDivider(color = Line, thickness = 1.dp)
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
-                    mainDestinations.forEach { dest ->
-                        NavigationBarItem(
-                            selected = parent == dest.route,
-                            onClick = {
-                                nav.navigate(dest.route) {
-                                    popUpTo("today") {
-                                        saveState = true
-                                    }; launchSingleTop = true; restoreState = true
-                                }
-                            },
-                            icon = { Icon(dest.icon, null, Modifier.size(22.dp)) },
-                            label = { Text(dest.title, style = MaterialTheme.typography.labelMedium) },
-                            alwaysShowLabel = true,
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Pine,
-                                selectedTextColor = Pine,
-                                indicatorColor = Mint,
-                                unselectedIconColor = Muted,
-                                unselectedTextColor = Muted
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    NavigationBar(
+                        modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth()
+                            .heightIn(min = if (fontScale > 1.3f) 104.dp else 80.dp),
+                        containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp
+                    ) {
+                        mainDestinations.forEach { dest ->
+                            NavigationBarItem(
+                                modifier = Modifier.testTag("nav_${dest.route}"),
+                                selected = parent == dest.route,
+                                onClick = {
+                                    nav.navigate(dest.route) {
+                                        popUpTo("today") {
+                                            saveState = true
+                                        }; launchSingleTop = true; restoreState = true
+                                    }
+                                },
+                                icon = { Icon(dest.icon, null, Modifier.size(22.dp)) },
+                                label = { Text(dest.title, style = MaterialTheme.typography.labelMedium) },
+                                alwaysShowLabel = true,
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = PrimaryAction,
+                                    selectedTextColor = PrimaryAction,
+                                    indicatorColor = SelectedSurface,
+                                    unselectedIconColor = Muted,
+                                    unselectedTextColor = Muted
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
@@ -109,20 +145,30 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
                         { nav.navigate(if (model.sessions.any { it.id == 1 }) "detail/1" else "records") })
                 }
                 composable("plan") {
-                    ShiftPlanScreen(model.acceptedWindow) {
-                        model.acceptedWindow = it; nav.popBackStack()
+                    ShiftPlanScreen(
+                        model.acceptedWindow,
+                        model.contextUnavailable,
+                        model.preferredWorkContext,
+                        onReturnToToday = { nav.popBackStack() }) { window, context ->
+                        model.acceptedWindow = window
+                        model.preferredWorkContext = context
+                        nav.popBackStack()
                     }
                 }
                 composable("break") {
-                    BreakScreen(model.sessions.find { it.id == 1 }?.outdoorMinutes ?: 0) { done ->
-                        model.checkInDone = done; model.checkInDeferred = !done
-                        val index = model.sessions.indexOfFirst { it.id == 1 }
-                        if (index >= 0) model.sessions[index] = model.sessions[index].copy(
-                            status = if (done) "Reviewed" else "Needs review",
-                            checkInNote = if (done) "Break check-in completed in the demo. No duration was added." else "A work adjustment needs discussion. The follow-up remains open."
-                        )
-                        nav.popBackStack()
-                    }
+                    BreakScreen(
+                        model.sessions.find { it.id == 1 }?.outdoorMinutes ?: 0,
+                        model.sessions.find { it.id == 1 }?.title ?: "Outdoor work",
+                        onRecord = { done, response ->
+                            model.checkInDone = done; model.checkInDeferred = !done
+                            model.pauseConstraint = if (done) "" else response
+                            val index = model.sessions.indexOfFirst { it.id == 1 }
+                            if (index >= 0) model.sessions[index] = model.sessions[index].copy(
+                                status = if (done) "Reviewed" else "Needs review",
+                                checkInNote = if (done) "Break check-in completed. No duration was added." else "$response. A work adjustment needs discussion. The follow-up remains open."
+                            )
+                        },
+                        onReturn = { nav.popBackStack() })
                 }
                 composable("records") {
                     RecordsScreen(

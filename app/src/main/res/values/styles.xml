@@ -3,7 +3,7 @@
     <style name="Theme.HeatShield" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:colorAccent">#145A52</item>
+        <item name="android:colorAccent">#30363D</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowSoftInputMode">adjustResize</item>
     </style>

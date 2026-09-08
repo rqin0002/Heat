@@ -4,10 +4,8 @@ package heatshield.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -15,145 +13,148 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.*
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Dialog
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+data class WorkContext(
+    val work: String = "Planting beds", val effort: String = "Heavy effort",
+    val clothing: String = "Standard workwear", val dayMillis: Long = 1768176000000L,
+    val startHour: Int = 7, val startMinute: Int = 0
+)
+
 @Composable
 fun TodayScreen(model: PrototypeViewModel, onPlan: () -> Unit, onBreak: () -> Unit, onRecord: () -> Unit) {
-    var stale by rememberSaveable { mutableStateOf(false) }
+    var stale by model::contextUnavailable
     val active = model.sessions.find { it.id == 1 }
-    val needsReview = active != null && !stale && !model.checkInDone
-    PageColumn {
-        ScreenHeader(
-            title = "Make room for shade.",
-            subtitle = "Birrarung Marr · Grounds maintenance",
-            eyebrow = "MONDAY, 12 JANUARY"
-        )
+    val pending = active != null && !stale && !model.checkInDone
+    val largeText = LocalDensity.current.fontScale > 1.3f
+    PageColumn(maxWidth = 840.dp) {
+        ScreenHeader(active?.site ?: "Birrarung Marr", eyebrow = "Monday, 12 January")
         SurfaceCard {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconBadge(
-                    icon = if (active == null) Icons.Outlined.EventNote else if (stale) Icons.Outlined.CloudOff else if (model.checkInDone) Icons.Outlined.CheckCircle else Icons.Outlined.Shield,
-                    tint = if (needsReview) Amber else if (active == null || stale) Muted else Pine,
-                    container = if (needsReview) AmberPale else if (active == null || stale) MaterialTheme.colorScheme.surfaceVariant else Mint
-                )
-                if (active == null || stale) {
-                    Text(
-                        if (active == null) "NO ACTIVE SESSION" else "CONTEXT UNAVAILABLE",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Muted
-                    )
-                } else {
-                    Tag(if (model.checkInDone) "CHECK-IN RECORDED" else "REVIEW YOUR NEXT STEP", needsReview)
-                }
-            }
             Text(
-                if (active == null) "Plan your next session" else if (stale) "Forecast needs a refresh" else if (model.checkInDone) "Your response is recorded" else if (model.checkInDeferred) "A task change may help" else "Time for a cooler pause",
-                style = MaterialTheme.typography.headlineSmall
+                when {
+                    active == null -> "No active session"
+                    stale -> "Conditions unavailable"
+                    model.checkInDone -> "Check-in recorded"
+                    model.checkInDeferred -> "Follow-up needed"
+                    else -> "Check-in due"
+                },
+                Modifier.semantics { heading(); liveRegion = LiveRegionMode.Polite },
+                style = MaterialTheme.typography.headlineSmall,
+                color = if (pending || stale) Attention else Ink
             )
             Text(
-                if (active == null) "The active demo record has been removed. Open your records to review or add a session." else if (stale) "Cached information is out of date. Check local conditions before comparing work windows." else if (model.checkInDone) "Keep following your workplace procedure. A logged check-in does not establish recovery." else if (model.checkInDeferred) "A cooler pause was not available. Discuss a lighter task or cooler location with your supervisor." else "Your planned check-in is due after heavy planting work. Review your options before the next block.",
-                style = MaterialTheme.typography.bodyMedium,
+                when {
+                    active == null -> "Add a work session to keep a record of your shift."
+                    stale -> "Refresh conditions before comparing work windows."
+                    model.checkInDone -> "Your response is saved. Continue to follow your workplace heat procedure."
+                    model.checkInDeferred -> "${model.pauseConstraint}. Discuss a lighter task or a cooler location."
+                    else -> "${active.title} · ${active.outdoorMinutes} min outdoors"
+                }, style = MaterialTheme.typography.bodyLarge
+            )
+            PrimaryButton(
+                when {
+                    active == null -> "Open work records"
+                    stale -> "Retry forecast"
+                    model.checkInDone -> "View session record"
+                    else -> "Check in now"
+                }
+            ) {
+                when {
+                    active == null -> onRecord()
+                    stale -> stale = false
+                    model.checkInDone -> onRecord()
+                    else -> onBreak()
+                }
+            }
+        }
+        FormSection("Conditions", if (stale) "Sample unavailable" else "Sample conditions · 11:30") {
+            val metrics: @Composable () -> Unit = {
+                Column(
+                    Modifier.semantics(mergeDescendants = true) {},
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(if (stale) "—" else "31°C", style = MaterialTheme.typography.displaySmall)
+                    Text("Air temperature", style = MaterialTheme.typography.bodyLarge)
+                    if (!stale) Text("48% humidity", style = MaterialTheme.typography.bodySmall, color = Muted)
+                }
+            }
+            val ultraviolet: @Composable () -> Unit = {
+                Column(
+                    Modifier.semantics(mergeDescendants = true) {},
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(if (stale) "—" else "7", style = MaterialTheme.typography.displaySmall)
+                    Text("UV index", style = MaterialTheme.typography.bodyLarge)
+                    if (!stale) Text(
+                        "High · sun protection",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Attention
+                    )
+                }
+            }
+            if (largeText) Column(verticalArrangement = Arrangement.spacedBy(24.dp)) { metrics(); ultraviolet() }
+            else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Box(Modifier.weight(1f)) { metrics() }
+                Box(Modifier.weight(1f)) { ultraviolet() }
+            }
+        }
+        HorizontalDivider(color = Line)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            SectionHeading("Your shift", action = "Review", onAction = onPlan)
+            Text(
+                "%02d:%02d–15:00".format(model.preferredWorkContext.startHour, model.preferredWorkContext.startMinute),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                "${model.preferredWorkContext.work} · ${model.acceptedWindow}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                "Preferred window · discuss before changing work",
+                style = MaterialTheme.typography.bodySmall,
                 color = Muted
             )
-            if (needsReview && active != null) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Tag("Heavy effort", true)
-                Tag("${active.outdoorMinutes} min outdoors", true)
-            }
-            PrimaryButton(if (active == null) "Open work records" else if (stale) "Retry demo forecast" else if (model.checkInDone) "View session record" else "Check in now") {
-                if (active == null) onRecord() else if (stale) stale =
-                    false else if (model.checkInDone) onRecord() else onBreak()
-            }
+            Text(active?.let { "${it.outdoorMinutes} min work · ${it.breakMinutes} min logged breaks" }
+                ?: "No session recorded", style = MaterialTheme.typography.bodySmall, color = Muted)
         }
-        SectionHeading("Conditions at a glance", "Illustrative conditions · 11:30")
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            SurfaceCard(Modifier.weight(1f).fillMaxHeight()) {
-                IconBadge(Icons.Outlined.Thermostat, size = 32.dp)
-                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(if (stale) "—" else "31°", style = MaterialTheme.typography.displaySmall, color = Ink)
-                    if (!stale) Text(
-                        "C",
-                        Modifier.padding(bottom = 3.dp),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Muted
-                    )
-                }
-                Text("Air temperature", style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    if (stale) "Stale sample" else "Humidity 48%",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Muted
-                )
-            }
-            SurfaceCard(Modifier.weight(1f).fillMaxHeight()) {
-                IconBadge(Icons.Outlined.WbSunny, size = 32.dp)
-                Text(if (stale) "—" else "7", style = MaterialTheme.typography.displaySmall, color = Ink)
-                Text("UV index", style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    if (stale) "Forecast unavailable" else "High · sun protection",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (stale) Muted else Amber
-                )
-            }
-        }
-        SurfaceCard {
-            SectionHeading("Your shift", "07:00–15:00 · illustrative plan", "Review", onPlan)
-            IconLine(
-                Icons.Outlined.Schedule,
-                "Heavy work · ${model.acceptedWindow}",
-                "Discuss schedule changes with your supervisor."
-            )
-            HorizontalDivider(color = Line)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                LabelValue(
-                    "Outdoor work",
-                    active?.let { "${it.outdoorMinutes} min" } ?: "No record",
-                    Modifier.weight(1f)
-                )
-                LabelValue(
-                    "Logged breaks",
-                    active?.let { "${it.breakMinutes} min" } ?: "No record",
-                    Modifier.weight(1f)
-                )
-                LabelValue(
-                    "Next step",
-                    if (active == null) "View records" else if (model.checkInDone) "Recorded" else "Check-in",
-                    Modifier.weight(1f)
-                )
-            }
-        }
-        Text(
-            "Sun protection is still needed for outdoor work when the UV index is low.",
-            style = MaterialTheme.typography.bodySmall,
-            color = Muted
-        )
-        DemoNote()
-        TextButton(
-            onClick = { stale = !stale },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-        ) { Text(if (stale) "Restore demo conditions" else "Preview unavailable data") }
     }
 }
 
 @Composable
-fun ShiftPlanScreen(acceptedWindow: String, onAccept: (String) -> Unit) {
+fun ShiftPlanScreen(
+    acceptedWindow: String,
+    contextUnavailable: Boolean = false,
+    initialContext: WorkContext = WorkContext(),
+    onReturnToToday: () -> Unit = {},
+    onAccept: (String, WorkContext) -> Unit
+) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    var work by rememberSaveable { mutableStateOf("Planting beds") }
-    var effort by rememberSaveable { mutableStateOf("Heavy effort") }
-    var clothing by rememberSaveable { mutableStateOf("Standard workwear") }
+    var work by rememberSaveable { mutableStateOf(initialContext.work) }
+    var effort by rememberSaveable { mutableStateOf(initialContext.effort) }
+    var clothing by rememberSaveable { mutableStateOf(initialContext.clothing) }
     var selected by rememberSaveable { mutableStateOf(acceptedWindow) }
-    var dayMillis by rememberSaveable { mutableLongStateOf(1768176000000L) }
-    var startHour by rememberSaveable { mutableIntStateOf(7) }
-    var startMinute by rememberSaveable { mutableIntStateOf(0) }
+    var dayMillis by rememberSaveable { mutableLongStateOf(initialContext.dayMillis) }
+    var startHour by rememberSaveable { mutableIntStateOf(initialContext.startHour) }
+    var startMinute by rememberSaveable { mutableIntStateOf(initialContext.startMinute) }
     var dateOpen by remember { mutableStateOf(false) }
     var timeOpen by remember { mutableStateOf(false) }
     val dateLabel =
@@ -161,55 +162,45 @@ fun ShiftPlanScreen(acceptedWindow: String, onAccept: (String) -> Unit) {
     val earlyFits = startHour * 60 + startMinute <= 480
     val lateFits = startHour * 60 + startMinute <= 720
     val demoDate = Instant.ofEpochMilli(dayMillis).atZone(ZoneOffset.UTC).toLocalDate().toString() == "2026-01-12"
-    PageColumn {
-        ScreenHeader(
-            "A better window for heavy work",
-            "Compare the conditions within your shift before agreeing a plan."
-        )
-        PrimaryTabRow(
-            selectedTabIndex = tab,
-            containerColor = Color.White,
-            contentColor = Pine,
-            modifier = Modifier.clip(RoundedCornerShape(14.dp))
-        ) {
-            Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Work context") })
-            Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Compare windows") })
+    val largeText = LocalDensity.current.fontScale > 1.3f
+    val shortWindow = LocalWindowInfo.current.containerSize.height / LocalDensity.current.density < 500
+    val compactDialog = largeText || shortWindow
+    PageColumn(maxWidth = 720.dp) {
+        PrimaryTabRow(selectedTabIndex = tab, containerColor = Paper, contentColor = PrimaryAction) {
+            Tab(
+                selected = tab == 0,
+                onClick = { tab = 0 },
+                modifier = Modifier.heightIn(min = if (largeText) 96.dp else 56.dp),
+                text = { Text("Work context") })
+            Tab(
+                selected = tab == 1,
+                onClick = { tab = 1 },
+                modifier = Modifier.heightIn(min = if (largeText) 96.dp else 56.dp),
+                text = { Text("Compare windows") })
         }
         if (tab == 0) {
-            SurfaceCard {
-                SectionHeading("When and where", "All fields are needed for this comparison")
+            FormSection("When and where", "All fields required") {
                 OutlinedButton(
-                    onClick = { dateOpen = true },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, Line),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Ink),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                    onClick = { dateOpen = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    shape = UiShape.control, colors = ButtonDefaults.outlinedButtonColors(contentColor = Ink),
+                    contentPadding = PaddingValues(16.dp)
                 ) {
-                    Icon(Icons.Outlined.CalendarMonth, null, tint = Pine)
+                    Icon(Icons.Outlined.CalendarMonth, null, tint = PrimaryAction)
                     Spacer(Modifier.width(12.dp))
                     Text("Work date · $dateLabel", Modifier.weight(1f))
-                    Spacer(Modifier.width(8.dp))
-                    Icon(Icons.Outlined.ExpandMore, null, tint = Muted)
                 }
                 OutlinedButton(
-                    onClick = { timeOpen = true },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, Line),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Ink),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                    onClick = { timeOpen = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    shape = UiShape.control, colors = ButtonDefaults.outlinedButtonColors(contentColor = Ink),
+                    contentPadding = PaddingValues(16.dp)
                 ) {
-                    Icon(Icons.Outlined.Schedule, null, tint = Pine)
+                    Icon(Icons.Outlined.Schedule, null, tint = PrimaryAction)
                     Spacer(Modifier.width(12.dp))
                     Text("Shift · %02d:%02d–15:00".format(startHour, startMinute), Modifier.weight(1f))
-                    Spacer(Modifier.width(8.dp))
-                    Icon(Icons.Outlined.ExpandMore, null, tint = Muted)
                 }
                 ChoiceField("Work site", "Birrarung Marr", listOf("Birrarung Marr"), {})
             }
-            SurfaceCard {
-                SectionHeading("Work demands", "Only context that changes the recommendation")
+            FormSection("Work details") {
                 ChoiceField("Work type", work, listOf("Planting beds", "Mowing", "Pruning"), { work = it })
                 ChoiceField(
                     "Effort",
@@ -223,63 +214,64 @@ fun ShiftPlanScreen(acceptedWindow: String, onAccept: (String) -> Unit) {
                     { clothing = it })
             }
             PrimaryButton("Compare work windows") { tab = 1 }
-            DemoNote("Demo forecasts illustrate 12 Jan 2026 only. Your chosen date is a form preview.")
-        } else if (!demoDate || !lateFits) {
-            SurfaceCard(tint = AmberPale) {
-                Text("No comparison available", style = MaterialTheme.typography.titleLarge)
-                Text(if (!demoDate) "This prototype has a forecast example for 12 Jan 2026 only. No forecast is available for the selected date." else "Neither example has a complete two-hour work block after your shift start.")
-            }
-            PrimaryButton("Change work context") { tab = 0 }
-        } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Tag(work); Tag(effort, effort == "Heavy effort") }
+        } else if (contextUnavailable || !demoDate || !lateFits) {
             SurfaceCard {
-                SectionHeading("Hourly air temperature", "Illustrative forecast · °C · 12 Jan")
-                ForecastChart()
                 Text(
-                    "Keep UV separate: sun protection applies in both windows.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Muted
+                    "No comparison available",
+                    Modifier.semantics { heading() },
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Attention
+                )
+                Text(
+                    if (contextUnavailable) "Refresh conditions on Today, then try again."
+                    else if (!demoDate) "Sample forecasts are available for 12 January 2026 only."
+                    else "Neither two-hour window fits after your shift starts."
                 )
             }
-            if (earlyFits) WindowChoice(
-                "08:00–10:00",
-                "Earlier heavy work",
-                "24–27°C · UV 3–5",
-                "Lower forecast temperature within this demo shift.",
-                selected == "08:00–10:00"
-            ) { selected = "08:00–10:00" }
-            WindowChoice(
-                "12:00–14:00",
-                "Later heavy work",
-                "31–34°C · UV 7–8",
-                "Higher forecast temperature and UV in this example.",
-                selected == "12:00–14:00"
-            ) { selected = "12:00–14:00" }
-            SurfaceCard(tint = Mint) {
-                IconLine(
-                    Icons.Outlined.Lightbulb,
+            PrimaryButton(if (contextUnavailable) "Return to Today" else "Change work context") {
+                if (contextUnavailable) onReturnToToday() else tab = 0
+            }
+        } else {
+            Text("$work · $effort", style = MaterialTheme.typography.bodyLarge)
+            FormSection("Air temperature", "Sample forecast · 12 January · °C") { ForecastChart() }
+            Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (earlyFits) WindowChoice("08:00–10:00", "24–27°C · UV 3–5", selected == "08:00–10:00") {
+                    selected = "08:00–10:00"
+                }
+                WindowChoice("12:00–14:00", "31–34°C · UV 7–8", selected == "12:00–14:00") { selected = "12:00–14:00" }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
                     if (earlyFits) "Discuss the earlier window" else "Review the later window",
-                    if (!earlyFits) "The cooler example is outside your shift. Discuss lighter work or a different arrangement." else if (effort == "Heavy effort" || clothing == "Heavy protective clothing") "Effort and clothing make a cooler work arrangement especially relevant." else "Plan lighter tasks around the conditions and available shade."
+                    Modifier.semantics { heading() },
+                    style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    "Saving records your preferred plan. Your supervisor still agrees changes to work or required PPE.",
+                    if (!earlyFits) "The cooler window is outside your shift. Discuss lighter work or a different arrangement."
+                    else if (effort == "Heavy effort" || clothing == "Heavy protective clothing") "Heavy effort or protective clothing makes a cooler work arrangement especially relevant."
+                    else "Plan lighter tasks around the conditions and available shade.",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    "Sun protection applies in both windows. Agree changes with your supervisor.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Muted
                 )
             }
-            PrimaryButton(
-                "Save preferred window",
-                enabled = earlyFits || selected == "12:00–14:00"
-            ) { onAccept(selected) }
-            DemoNote("Window comparison is a demonstration, not a safe-work limit.")
+            PrimaryButton("Save preferred window", enabled = earlyFits || selected == "12:00–14:00") {
+                onAccept(selected, WorkContext(work, effort, clothing, dayMillis, startHour, startMinute))
+            }
         }
     }
     if (dateOpen) {
-        val dateState = rememberDatePickerState(initialSelectedDateMillis = dayMillis)
+        val dateState = rememberDatePickerState(
+            initialSelectedDateMillis = dayMillis,
+            initialDisplayMode = if (compactDialog) DisplayMode.Input else DisplayMode.Picker
+        )
         DatePickerDialog(
             onDismissRequest = { dateOpen = false },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(enabled = dateState.selectedDateMillis != null, onClick = {
                     dateState.selectedDateMillis?.let { dayMillis = it }; dateOpen = false
                 }) { Text("Apply date") }
             },
@@ -291,61 +283,112 @@ fun ShiftPlanScreen(acceptedWindow: String, onAccept: (String) -> Unit) {
     }
     if (timeOpen) {
         val timeState = rememberTimePickerState(initialHour = startHour, initialMinute = startMinute, is24Hour = true)
-        AlertDialog(
+        var compactHour by remember { mutableStateOf("%02d".format(startHour)) }
+        var compactMinute by remember { mutableStateOf("%02d".format(startMinute)) }
+        val compactTimeValid = compactHour.toIntOrNull() in 0..14 && compactMinute.toIntOrNull() in 0..59
+        val applyTime = {
+            startHour = timeState.hour; startMinute = timeState.minute; timeOpen = false
+        }
+        if (shortWindow) Dialog(
+            onDismissRequest = { timeOpen = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+        ) {
+            Box(Modifier.fillMaxSize().safeDrawingPadding().imePadding(), contentAlignment = Alignment.Center) {
+                Surface(
+                    Modifier.widthIn(max = 720.dp).fillMaxWidth().padding(horizontal = 16.dp)
+                        .semantics { paneTitle = "Shift start" }, shape = UiShape.card
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(
+                                compactHour,
+                                { if (it.length <= 2 && it.all(Char::isDigit)) compactHour = it },
+                                label = { Text("Hour (0–14)") },
+                                singleLine = true,
+                                isError = compactHour.toIntOrNull() !in 0..14,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Next
+                                ),
+                                modifier = Modifier.weight(1f),
+                                shape = UiShape.control
+                            )
+                            OutlinedTextField(
+                                compactMinute,
+                                { if (it.length <= 2 && it.all(Char::isDigit)) compactMinute = it },
+                                label = { Text("Minute (0–59)") },
+                                singleLine = true,
+                                isError = compactMinute.toIntOrNull() !in 0..59,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                modifier = Modifier.weight(1f),
+                                shape = UiShape.control
+                            )
+                        }
+                        Row(
+                            Modifier.width(232.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = { timeOpen = false },
+                                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+                            ) { Text("Cancel") }
+                            PrimaryButton("Apply time", Modifier.weight(1.3f), enabled = compactTimeValid) {
+                                startHour = compactHour.toInt(); startMinute = compactMinute.toInt(); timeOpen = false
+                            }
+                        }
+                    }
+                }
+            }
+        } else AlertDialog(
+            modifier = Modifier.safeDrawingPadding().imePadding(),
+            properties = DialogProperties(decorFitsSystemWindows = false),
             onDismissRequest = { timeOpen = false },
             title = { Text("Shift start") },
             text = {
-                Column {
-                    TimePicker(state = timeState); Text(
-                    "Demo shift ends at 15:00. Select a start before 15:00.",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    if (compactDialog) TimeInput(state = timeState) else TimePicker(state = timeState)
+                    Text(
+                        "Shift ends at 15:00. Select a start before 15:00.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             },
             confirmButton = {
                 TextButton(
                     enabled = timeState.hour < 15,
-                    onClick = {
-                        startHour = timeState.hour; startMinute = timeState.minute; timeOpen = false
-                    }) { Text("Apply time") }
+                    onClick = applyTime
+                ) { Text("Apply time") }
             },
             dismissButton = { TextButton(onClick = { timeOpen = false }) { Text("Cancel") } })
     }
 }
 
 @Composable
-private fun WindowChoice(
-    window: String,
-    title: String,
-    metrics: String,
-    reason: String,
-    selected: Boolean,
-    onSelect: () -> Unit
-) {
-    val shape = RoundedCornerShape(20.dp)
-    SurfaceCard(
-        modifier = Modifier.clip(shape)
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect)
-            .border(BorderStroke(if (selected) 1.5.dp else 1.dp, if (selected) Pine else Line), shape),
-        tint = if (selected) Mint else Color.White
+private fun WindowChoice(window: String, metrics: String, selected: Boolean, onSelect: () -> Unit) {
+    Surface(
+        shape = UiShape.control, color = if (selected) SelectedSurface else Color.White,
+        border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) PrimaryAction else Line)
     ) {
         Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            Modifier.fillMaxWidth().heightIn(min = 80.dp)
+                .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect)
+                .padding(16.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            RadioButton(
-                selected = selected,
-                onClick = null,
-                colors = RadioButtonDefaults.colors(selectedColor = Pine, unselectedColor = Muted)
-            )
+            RadioButton(selected = selected, onClick = null)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(window, style = MaterialTheme.typography.titleLarge, color = if (selected) Pine else Ink)
-                Text(title, style = MaterialTheme.typography.bodyMedium, color = Muted)
+                Text(window, style = MaterialTheme.typography.titleMedium)
+                Text(metrics, style = MaterialTheme.typography.bodyLarge, color = Muted)
             }
         }
-        Text(metrics, style = MaterialTheme.typography.labelLarge, color = Ink)
-        Text(reason, style = MaterialTheme.typography.bodySmall, color = Muted)
     }
 }
 
@@ -353,183 +396,162 @@ private fun WindowChoice(
 private fun ForecastChart() {
     val values = listOf(24f, 27f, 31f, 34f, 32f)
     val times = listOf("08:00", "10:00", "12:00", "14:00", "16:00")
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(Modifier.fillMaxWidth()) {
-            Spacer(Modifier.width(32.dp))
-            values.forEach { value ->
-                Text(
-                    "${value.toInt()}°",
-                    Modifier.weight(1f),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Pine,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-        Row(Modifier.fillMaxWidth()) {
-            Column(Modifier.width(32.dp).height(112.dp), verticalArrangement = Arrangement.SpaceBetween) {
-                listOf("36°", "29°", "22°").forEach { tick ->
-                    Text(tick, style = MaterialTheme.typography.bodySmall, color = Muted)
+    val scale = LocalDensity.current.fontScale.coerceAtLeast(1f)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val chartWidth = maxOf(maxWidth, 300.dp * scale)
+        val plotHeight = 112.dp * scale
+        Column(Modifier.horizontalScroll(rememberScrollState())) {
+            Column(Modifier.width(chartWidth), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth()) {
+                    Spacer(Modifier.width(40.dp * scale))
+                    values.forEach { value ->
+                        Text(
+                            "${value.toInt()}°",
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = PrimaryAction,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
-            }
-            Canvas(Modifier.weight(1f).height(112.dp).padding(vertical = 8.dp).semantics {
-                contentDescription =
-                    "Illustrative air temperature in degrees Celsius: 24 at 08:00, 27 at 10:00, 31 at 12:00, 34 at 14:00 and 32 at 16:00."
-            }) {
-                // Half a label column at each edge aligns ticks and protects end points.
-                val left = size.width / (values.size * 2f)
-                val right = size.width - left
-                for (fraction in listOf(0f, 0.5f, 1f)) {
-                    val y = size.height * fraction
-                    drawLine(Line, Offset(left, y), Offset(right, y), 1.dp.toPx())
+                Row(Modifier.fillMaxWidth()) {
+                    Column(
+                        Modifier.width(40.dp * scale).height(plotHeight),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        listOf("36°", "29°", "22°").forEach {
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Muted
+                            )
+                        }
+                    }
+                    Canvas(Modifier.weight(1f).height(plotHeight).padding(vertical = 8.dp).semantics {
+                        contentDescription =
+                            "Sample air temperature: 24 degrees Celsius at 08:00, 27 at 10:00, 31 at 12:00, 34 at 14:00 and 32 at 16:00."
+                    }) {
+                        val left = size.width / (values.size * 2f)
+                        val right = size.width - left
+                        for (fraction in listOf(0f, 0.5f, 1f)) {
+                            val y = size.height * fraction
+                            drawLine(Line, Offset(left, y), Offset(right, y), 1.dp.toPx())
+                        }
+                        val points = values.mapIndexed { index, value ->
+                            Offset(
+                                left + index * (right - left) / (values.size - 1),
+                                size.height * (36f - value) / 14f
+                            )
+                        }
+                        points.zipWithNext()
+                            .forEach { (a, b) -> drawLine(PrimaryAction, a, b, 3.dp.toPx(), StrokeCap.Round) }
+                        points.forEach { drawCircle(PrimaryAction, 4.dp.toPx(), it) }
+                    }
                 }
-                val points = values.mapIndexed { index, value ->
-                    Offset(left + index * (right - left) / (values.size - 1), size.height * (36f - value) / 14f)
+                Row(Modifier.fillMaxWidth()) {
+                    Spacer(Modifier.width(40.dp * scale))
+                    times.forEach {
+                        Text(
+                            it,
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Muted,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
-                points.zipWithNext().forEach { (a, b) -> drawLine(Pine, a, b, 3.dp.toPx(), StrokeCap.Round) }
-                points.forEach { point ->
-                    drawCircle(Color.White, 5.dp.toPx(), point)
-                    drawCircle(Pine, 3.5.dp.toPx(), point)
-                }
-            }
-        }
-        Row(Modifier.fillMaxWidth()) {
-            Spacer(Modifier.width(32.dp))
-            times.forEach { time ->
-                Text(
-                    time,
-                    Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Muted,
-                    textAlign = TextAlign.Center
-                )
             }
         }
     }
 }
 
 @Composable
-fun BreakScreen(outdoorMinutes: Int = 95, onDone: (Boolean) -> Unit) {
+fun BreakScreen(
+    outdoorMinutes: Int = 95,
+    workTitle: String = "Planting beds",
+    onRecord: (Boolean, String) -> Unit,
+    onReturn: () -> Unit
+) {
     var choice by rememberSaveable { mutableStateOf("Cooler place available") }
     var started by rememberSaveable { mutableStateOf(false) }
     var confirmed by rememberSaveable { mutableStateOf(false) }
-    PageColumn {
-        ScreenHeader(
-            title = if (confirmed) "Your response is ready" else if (started) "Take the pause you need" else "What is possible right now?",
-            subtitle = "Heavy planting work · $outdoorMinutes minutes logged outdoors",
-            eyebrow = "PLANNED CHECK-IN"
-        )
-        SurfaceCard {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-                IconBadge(Icons.Outlined.Info, tint = Amber, container = AmberPale)
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Why this check-in?", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "Your agreed check-in is due, with heavy effort and changing environmental conditions.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Muted
-                    )
-                }
-            }
-            Text(
-                "Use your workplace heat procedure. This app does not measure body temperature or certify recovery.",
-                style = MaterialTheme.typography.bodySmall,
-                color = Muted
-            )
-        }
+    PageColumn(maxWidth = 640.dp) {
         if (!started && !confirmed) {
-            SurfaceCard {
-                Text("Choose your next step", style = MaterialTheme.typography.titleMedium)
+            ScreenHeader("Can you take a cooler pause?", "$outdoorMinutes min logged · $workTitle")
+            Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf("Cooler place available", "No cooler place available", "Cannot pause yet").forEach { option ->
                     Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = if (choice == option) Mint else Color.White,
-                        border = BorderStroke(1.dp, if (choice == option) Pine else Line)
+                        shape = UiShape.control, color = if (choice == option) SelectedSurface else Color.White,
+                        border = BorderStroke(
+                            if (choice == option) 2.dp else 1.dp,
+                            if (choice == option) PrimaryAction else Line
+                        )
                     ) {
                         Row(
-                            Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                            Modifier.fillMaxWidth().heightIn(min = 64.dp)
                                 .selectable(
                                     selected = choice == option,
                                     role = Role.RadioButton,
                                     onClick = { choice = option })
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                                .padding(16.dp),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            RadioButton(
-                                selected = choice == option,
-                                onClick = null,
-                                colors = RadioButtonDefaults.colors(selectedColor = Pine, unselectedColor = Muted)
-                            )
-                            Text(
-                                option,
-                                Modifier.weight(1f),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = if (choice == option) Pine else Ink
-                            )
+                            RadioButton(selected = choice == option, onClick = null)
+                            Text(option, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
             }
-            SurfaceCard(tint = if (choice == "Cooler place available") Mint else AmberPale) {
-                IconLine(
-                    Icons.Outlined.Lightbulb,
-                    if (choice == "Cooler place available") "Move to the cooler place" else "Discuss a work adjustment",
-                    if (choice == "Cooler place available") "Pause in a suitable cooler area and follow your workplace hydration and rest guidance." else "Tell your supervisor what is preventing a pause. Ask about a lighter task or a cooler location."
-                )
-            }
+            Text(
+                if (choice == "Cooler place available") "Move to a cooler area and follow your workplace rest and hydration guidance."
+                else "Discuss a lighter task or a cooler location with your supervisor. Your follow-up will stay open.",
+                Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyLarge
+            )
             PrimaryButton(if (choice == "Cooler place available") "Start break preview" else "Record this response") {
-                if (choice == "Cooler place available") started = true else confirmed = true
+                if (choice == "Cooler place available") started = true else {
+                    onRecord(false, choice)
+                    confirmed = true
+                }
             }
         } else if (started && !confirmed) {
-            SurfaceCard {
-                Text("Break in progress", style = MaterialTheme.typography.titleLarge)
-                Column(
-                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    IconBadge(Icons.Outlined.Timer)
-                    Text("00:00", style = MaterialTheme.typography.displaySmall, color = Pine)
-                    Text(
-                        "Timer preview · no recovery target",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Muted
-                    )
-                }
-                Text(
-                    "Finish when appropriate under your workplace procedure. Logging this event does not mean it is safe to return to work.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+            ScreenHeader("Break in progress")
+            Text("00:00", style = MaterialTheme.typography.displaySmall, color = PrimaryAction)
+            Text("Timer preview · no recovery target", style = MaterialTheme.typography.bodySmall, color = Muted)
+            Text(
+                "Follow your workplace heat procedure. A check-in cannot tell you when it is safe to return to work.",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            PrimaryButton("Finish break preview") {
+                onRecord(true, choice)
+                confirmed = true
             }
-            PrimaryButton("Finish break preview") { confirmed = true }
             OutlinedButton(
                 onClick = { started = false },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                shape = RoundedCornerShape(14.dp)
+                shape = UiShape.control
             ) { Text("Change my response") }
         } else {
-            SurfaceCard(tint = if (started) Mint else AmberPale) {
-                IconLine(
-                    if (started) Icons.Outlined.CheckCircle else Icons.Outlined.Schedule,
+            SurfaceCard {
+                Text(
                     if (started) "Break check-in completed" else "Follow-up remains open",
-                    if (started) "The demo overview will show that you checked in." else "The demo overview will prompt a task-change discussion.",
-                    iconTint = if (started) Pine else Amber
+                    Modifier.semantics { heading(); liveRegion = LiveRegionMode.Polite },
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = if (started) Ink else Attention
                 )
                 Text(
-                    "No notification has been scheduled by this prototype.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Muted
+                    if (started) "Your response is recorded. No break minutes were added." else "$choice. A work adjustment still needs discussion.",
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
-            PrimaryButton("Return to Today") { onDone(started) }
+            PrimaryButton("Return to Today", onClick = onReturn)
         }
-        SectionHeading("Reminders support your plan")
-        Text(
-            "Background reminders may arrive late. Keep following scheduled workplace breaks even when no reminder appears.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Muted
-        )
-        DemoNote("This flow previews responses. It is not an emergency monitor.")
+        Disclosure("Why check in?") {
+            Text(
+                "The planned check-in is due after heavy work in changing conditions. Use your workplace heat procedure; this app does not measure body temperature or certify recovery.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Muted
+            )
+        }
     }
 }

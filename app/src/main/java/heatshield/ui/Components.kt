@@ -3,112 +3,113 @@
 package heatshield.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 @Composable
-fun PageColumn(content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)
-            .padding(top = 12.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp), content = content
-    )
-}
-
-@Composable
-fun ScreenHeader(title: String, subtitle: String? = null, eyebrow: String? = null) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (eyebrow != null) Text(eyebrow, style = MaterialTheme.typography.labelMedium, color = Pine)
-        Text(title, style = MaterialTheme.typography.headlineSmall)
-        if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Muted)
+fun PageColumn(
+    modifier: Modifier = Modifier,
+    maxWidth: Dp = 720.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Column(
+            modifier.widthIn(max = maxWidth).fillMaxWidth().testTag("page_content")
+                .verticalScroll(rememberScrollState()).imePadding()
+                .padding(horizontal = UiSpace.section).padding(top = UiSpace.related, bottom = UiSpace.large),
+            verticalArrangement = Arrangement.spacedBy(UiSpace.section), content = content
+        )
     }
 }
 
 @Composable
-fun IconBadge(icon: ImageVector, tint: Color = Pine, container: Color = Mint, size: Dp = 40.dp) {
-    Surface(color = container, shape = RoundedCornerShape(12.dp), modifier = Modifier.size(size)) {
-        Box(contentAlignment = Alignment.Center) { Icon(icon, null, Modifier.size(size * .55f), tint = tint) }
+fun FormSection(title: String, subtitle: String? = null, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(UiSpace.related)) {
+        SectionHeading(title, subtitle)
+        content()
+    }
+}
+
+@Composable
+fun Disclosure(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Column(modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                .semantics { stateDescription = if (expanded) "Expanded" else "Collapsed" }
+                .clickable(
+                    role = Role.Button,
+                    onClickLabel = if (expanded) "Hide details" else "Show details"
+                ) { expanded = !expanded }
+                .padding(vertical = UiSpace.small),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(UiSpace.small)
+        ) {
+            Text(title, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, color = PrimaryAction)
+            Icon(if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = PrimaryAction)
+        }
+        if (expanded) Column(
+            Modifier.fillMaxWidth().padding(top = UiSpace.small, bottom = UiSpace.small),
+            verticalArrangement = Arrangement.spacedBy(UiSpace.related), content = content
+        )
+    }
+}
+
+@Composable
+fun ScreenHeader(title: String, subtitle: String? = null, eyebrow: String? = null) {
+    Column(verticalArrangement = Arrangement.spacedBy(UiSpace.small)) {
+        if (eyebrow != null) Text(eyebrow, style = MaterialTheme.typography.bodySmall, color = Muted)
+        Text(title, Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineSmall)
+        if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Muted)
     }
 }
 
 @Composable
 fun SectionHeading(title: String, subtitle: String? = null, action: String? = null, onAction: () -> Unit = {}) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(UiSpace.tiny)) {
+            Text(title, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleMedium)
             if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
         }
-        if (action != null) TextButton(onClick = onAction) { Text(action) }
+        if (action != null) TextButton(onClick = onAction, modifier = Modifier.heightIn(min = 48.dp)) { Text(action) }
     }
 }
 
 @Composable
 fun SurfaceCard(modifier: Modifier = Modifier, tint: Color = Color.White, content: @Composable ColumnScope.() -> Unit) {
     Card(
-        modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        modifier.fillMaxWidth(), shape = UiShape.card,
         colors = CardDefaults.cardColors(containerColor = tint),
-        border = BorderStroke(1.dp, if (tint == Color.White) Line else tint)
+        border = if (tint == Color.White) BorderStroke(1.dp, Line) else null
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
-    }
-}
-
-@Composable
-fun Tag(text: String, caution: Boolean = false) {
-    Surface(
-        color = if (caution) AmberPale else Mint,
-        contentColor = if (caution) Amber else Pine,
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Text(
-            text,
-            Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold
+        Column(
+            Modifier.padding(UiSpace.section),
+            verticalArrangement = Arrangement.spacedBy(UiSpace.related),
+            content = content
         )
-    }
-}
-
-@Composable
-fun LabelValue(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = Muted)
-        Text(value, style = MaterialTheme.typography.titleMedium)
-    }
-}
-
-@Composable
-fun IconLine(icon: ImageVector, title: String, subtitle: String? = null, iconTint: Color = Pine) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, null, Modifier.size(22.dp), tint = iconTint)
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium)
-            if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
-        }
     }
 }
 
 @Composable
 fun PrimaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolean = true, onClick: () -> Unit) {
     Button(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth().heightIn(min = 52.dp),
-        enabled = enabled,
-        shape = RoundedCornerShape(14.dp),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
+        onClick = onClick, modifier = modifier.fillMaxWidth().heightIn(min = 52.dp),
+        enabled = enabled, shape = UiShape.control,
+        contentPadding = PaddingValues(horizontal = UiSpace.related, vertical = UiSpace.compact)
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }
 }
 
@@ -127,14 +128,11 @@ fun ChoiceField(
         modifier = modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
-            value = value,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            singleLine = true,
+            value = value, onValueChange = {}, readOnly = true, label = { Text(label) },
+            singleLine = false, textStyle = MaterialTheme.typography.bodyLarge,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp)
+            shape = UiShape.control
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
@@ -143,13 +141,5 @@ fun ChoiceField(
                     onClick = { onChange(option); expanded = false })
             }
         }
-    }
-}
-
-@Composable
-fun DemoNote(text: String = "Illustrative demo data · not a live safety assessment") {
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Outlined.Info, null, Modifier.size(15.dp), tint = Muted)
-        Text(text, style = MaterialTheme.typography.bodySmall, color = Muted)
     }
 }
