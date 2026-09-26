@@ -9,6 +9,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.espresso.Espresso
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -46,6 +47,7 @@ class PrototypeJourneyTest {
         compose.onNodeWithText("Password reset preview").assertIsDisplayed()
         compose.onNodeWithText("Password reset is not connected in this demo. No email will be sent.")
             .assertIsDisplayed()
+        capture("23_password_reset.png")
         click("Dismiss", scroll = false)
         compose.onNodeWithText("Password reset preview").assertDoesNotExist()
         replace("Password", "Shade before midday")
@@ -112,6 +114,18 @@ class PrototypeJourneyTest {
         capture("15_dropdown.png")
         choose("Pruning")
         compose.onNodeWithText("Pruning").assertExists()
+        // Comparison is a second step; every Back path preserves the entered context.
+        click("Compare work windows")
+        compose.onNodeWithTag("app_title").assertTextEquals("Compare windows")
+        compose.onNodeWithText("Pruning · Heavy effort").assertExists()
+        compose.onNodeWithContentDescription("Back").performClick()
+        reach(hasText("Work type")).assertTextContains("Pruning")
+        click("Compare work windows")
+        Espresso.pressBack()
+        reach(hasText("Work type")).assertTextContains("Pruning")
+        click("Compare work windows")
+        click("Change work context")
+        reach(hasText("Work type")).assertTextContains("Pruning")
         openChoice("Work type")
         choose("Planting beds")
         click("Compare work windows")
@@ -270,7 +284,7 @@ class PrototypeJourneyTest {
         compose.onNodeWithText("6 sessions").assertExists()
         tab("Trends")
         totals(610, 95)
-        assertEquals(22, File(screenshots, "capture-manifest.csv").readLines().size - 1)
+        assertEquals(23, File(screenshots, "capture-manifest.csv").readLines().size - 1)
     }
 
     private fun selectable(label: String): SemanticsMatcher =

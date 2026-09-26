@@ -272,7 +272,9 @@ fun SessionDetailScreen(session: DemoSession, onEdit: () -> Unit, onDelete: () -
     var confirmDelete by remember { mutableStateOf(false) }
     PageColumn {
         ScreenHeader(session.title, "${session.site} · ${session.date}")
-        RecordStatus(session.status)
+        FormSection("Follow-up status") {
+            Text(session.status, style = MaterialTheme.typography.bodyLarge, color = Ink)
+        }
         RecordMetricPair("Outdoor work", "${session.outdoorMinutes}", "Logged breaks", "${session.breakMinutes}")
         session.checkInNote?.let { note ->
             FormSection("Latest check-in") {
@@ -290,23 +292,29 @@ fun SessionDetailScreen(session: DemoSession, onEdit: () -> Unit, onDelete: () -
             )
         }
         PrimaryButton("Edit record", onClick = onEdit)
-        TextButton(
-            onClick = { confirmDelete = true }, modifier = Modifier.heightIn(min = 48.dp),
-            colors = ButtonDefaults.textButtonColors(contentColor = ErrorRed)
+        OutlinedButton(
+            onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+            shape = UiShape.control, border = BorderStroke(1.dp, ErrorRed),
+            contentPadding = PaddingValues(horizontal = UiSpace.related, vertical = UiSpace.compact),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed)
         ) { Text("Delete record") }
     }
     if (confirmDelete) AlertDialog(
         onDismissRequest = { confirmDelete = false }, title = { Text("Delete this record?") },
         text = { Text("Remove ${session.title.lowercase()} at ${session.site} on ${session.date} from your records and trends?") },
         confirmButton = {
-            TextButton(onClick = { confirmDelete = false; onDelete() }) {
-                Text(
-                    "Delete record",
-                    color = ErrorRed
-                )
-            }
+            Button(
+                onClick = { confirmDelete = false; onDelete() },
+                modifier = Modifier.heightIn(min = 52.dp), shape = UiShape.control,
+                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
+            ) { Text("Delete record") }
         },
-        dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Keep record") } }
+        dismissButton = {
+            OutlinedButton(
+                onClick = { confirmDelete = false },
+                modifier = Modifier.heightIn(min = 52.dp), shape = UiShape.control
+            ) { Text("Keep record") }
+        }
     )
 }
 

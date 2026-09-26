@@ -20,7 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +41,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -75,16 +73,11 @@ fun LoginScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
                 errorMessage = passwordError,
                 onDone = submit
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(
-                    onClick = { resetPreview = true },
-                    modifier = Modifier.heightIn(min = 48.dp),
-                    shape = UiShape.control
-                ) {
-                    Text("Forgot password?", textAlign = TextAlign.Center)
-                }
-            }
             PrimaryButton("Log in to demo", onClick = submit)
+            SecondaryButton("Forgot password?") {
+                focusManager.clearFocus()
+                resetPreview = true
+            }
         }
         AuthAlternatives(accountAction = "Create account", onAccountAction = onSignUp, onExplore = onLogin)
     }
@@ -94,10 +87,7 @@ fun LoginScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
             title = { Text("Password reset preview") },
             text = { Text("Password reset is not connected in this demo. No email will be sent.") },
             confirmButton = {
-                TextButton(
-                    onClick = { resetPreview = false },
-                    modifier = Modifier.heightIn(min = 48.dp)
-                ) { Text("Dismiss") }
+                PrimaryButton("Dismiss", onClick = { resetPreview = false })
             }
         )
     }
@@ -222,27 +212,15 @@ fun ProfileScreen(onSignOut: () -> Unit) {
                 Text("Saved on this screen.", style = MaterialTheme.typography.bodyMedium)
             }
         }
-        TextButton(
-            onClick = onSignOut,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-            shape = UiShape.control
-        ) { Text("Leave demo", textAlign = TextAlign.Center) }
+        SecondaryButton("Leave demo", onClick = onSignOut)
     }
 }
 
 @Composable
 private fun AuthAlternatives(accountAction: String, onAccountAction: () -> Unit, onExplore: () -> Unit) {
-    Column {
-        TextButton(
-            onClick = onAccountAction,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-            shape = UiShape.control
-        ) { Text(accountAction, textAlign = TextAlign.Center) }
-        TextButton(
-            onClick = onExplore,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-            shape = UiShape.control
-        ) { Text("Explore demo", color = Muted, textAlign = TextAlign.Center) }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SecondaryButton(accountAction, onClick = onAccountAction)
+        SecondaryButton("Explore demo", onClick = onExplore)
     }
 }
 

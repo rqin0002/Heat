@@ -3,6 +3,7 @@
 package heatshield.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -24,12 +25,13 @@ import androidx.compose.ui.unit.dp
 fun PageColumn(
     modifier: Modifier = Modifier,
     maxWidth: Dp = 720.dp,
+    scrollState: ScrollState = rememberScrollState(),
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(
             modifier.widthIn(max = maxWidth).fillMaxWidth().testTag("page_content")
-                .verticalScroll(rememberScrollState()).imePadding()
+                .verticalScroll(scrollState).imePadding()
                 .padding(horizontal = UiSpace.section).padding(top = UiSpace.related, bottom = UiSpace.large),
             verticalArrangement = Arrangement.spacedBy(UiSpace.section), content = content
         )
@@ -109,6 +111,15 @@ fun PrimaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolean 
     Button(
         onClick = onClick, modifier = modifier.fillMaxWidth().heightIn(min = 52.dp),
         enabled = enabled, shape = UiShape.control,
+        contentPadding = PaddingValues(horizontal = UiSpace.related, vertical = UiSpace.compact)
+    ) { Text(text, style = MaterialTheme.typography.labelLarge) }
+}
+
+@Composable
+fun SecondaryButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick, modifier = modifier.fillMaxWidth().heightIn(min = 52.dp),
+        shape = UiShape.control,
         contentPadding = PaddingValues(horizontal = UiSpace.related, vertical = UiSpace.compact)
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }
 }

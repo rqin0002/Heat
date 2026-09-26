@@ -2,6 +2,7 @@
 
 package heatshield.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
@@ -144,10 +145,11 @@ fun ShiftPlanScreen(
     acceptedWindow: String,
     contextUnavailable: Boolean = false,
     initialContext: WorkContext = WorkContext(),
+    comparing: Boolean,
+    onStepChange: (Boolean) -> Unit,
     onReturnToToday: () -> Unit = {},
     onAccept: (String, WorkContext) -> Unit
 ) {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
     var work by rememberSaveable { mutableStateOf(initialContext.work) }
     var effort by rememberSaveable { mutableStateOf(initialContext.effort) }
     var clothing by rememberSaveable { mutableStateOf(initialContext.clothing) }
@@ -165,20 +167,15 @@ fun ShiftPlanScreen(
     val largeText = LocalDensity.current.fontScale > 1.3f
     val shortWindow = LocalWindowInfo.current.containerSize.height / LocalDensity.current.density < 500
     val compactDialog = largeText || shortWindow
-    PageColumn(maxWidth = 720.dp) {
-        PrimaryTabRow(selectedTabIndex = tab, containerColor = Paper, contentColor = PrimaryAction) {
-            Tab(
-                selected = tab == 0,
-                onClick = { tab = 0 },
-                modifier = Modifier.heightIn(min = if (largeText) 96.dp else 56.dp),
-                text = { Text("Work context") })
-            Tab(
-                selected = tab == 1,
-                onClick = { tab = 1 },
-                modifier = Modifier.heightIn(min = if (largeText) 96.dp else 56.dp),
-                text = { Text("Compare windows") })
-        }
-        if (tab == 0) {
+    val planScrollState = rememberScrollState()
+    LaunchedEffect(comparing) { planScrollState.scrollTo(0) }
+    BackHandler(enabled = comparing) { onStepChange(false) }
+    PageColumn(maxWidth = 720.dp, scrollState = planScrollState) {
+        Text(
+            if (comparing) "Step 2 of 2 · Compare and choose" else "Step 1 of 2 · Work context",
+            style = MaterialTheme.typography.bodyMedium, color = Muted
+        )
+        if (!comparing) {
             FormSection("When and where", "All fields required") {
                 OutlinedButton(
                     onClick = { dateOpen = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
@@ -213,7 +210,7 @@ fun ShiftPlanScreen(
                     listOf("Standard workwear", "Heavy protective clothing"),
                     { clothing = it })
             }
-            PrimaryButton("Compare work windows") { tab = 1 }
+            PrimaryButton("Compare work windows") { onStepChange(true) }
         } else if (contextUnavailable || !demoDate || !lateFits) {
             SurfaceCard {
                 Text(
@@ -229,8 +226,9 @@ fun ShiftPlanScreen(
                 )
             }
             PrimaryButton(if (contextUnavailable) "Return to Today" else "Change work context") {
-                if (contextUnavailable) onReturnToToday() else tab = 0
+                if (contextUnavailable) onReturnToToday() else onStepChange(false)
             }
+            if (contextUnavailable) SecondaryButton("Change work context") { onStepChange(false) }
         } else {
             Text("$work · $effort", style = MaterialTheme.typography.bodyLarge)
             FormSection("Air temperature", "Sample forecast · 12 January · °C") { ForecastChart() }
@@ -261,6 +259,7 @@ fun ShiftPlanScreen(
             PrimaryButton("Save preferred window", enabled = earlyFits || selected == "12:00–14:00") {
                 onAccept(selected, WorkContext(work, effort, clothing, dayMillis, startHour, startMinute))
             }
+            SecondaryButton("Change work context") { onStepChange(false) }
         }
     }
     if (dateOpen) {

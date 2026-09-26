@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalDensity
@@ -43,6 +44,7 @@ val mainDestinations = listOf(
 
 @Composable
 fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
+    var comparingPlan by rememberSaveable { mutableStateOf(false) }
     val fontScale = LocalDensity.current.fontScale
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
@@ -55,7 +57,8 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
     }
     val title = when (route) {
         "login" -> "HeatShield"; "signup" -> "Create account"; "today" -> "Today"
-        "plan" -> "Shift plan"; "records" -> "Work records"; "search" -> "Search records"
+        "plan" -> if (comparingPlan) "Compare windows" else "Shift plan"
+        "records" -> "Work records"; "search" -> "Search records"
         "detail/{id}" -> "Session detail"; "edit/{id}" -> if (entry?.arguments?.getString("id") == "0") "Add record" else "Edit record"
         "trends" -> "Trends"; "profile" -> "Profile"; "break" -> "Break check-in"; else -> "HeatShield"
     }
@@ -85,7 +88,9 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
                     },
                     expandedHeight = 64.dp * fontScale.coerceIn(1f, 2f),
                     navigationIcon = {
-                        if (isSecondary || route == "signup") IconButton(onClick = { nav.popBackStack() }) {
+                        if (isSecondary || route == "signup") IconButton(onClick = {
+                            if (route == "plan" && comparingPlan) comparingPlan = false else nav.popBackStack()
+                        }) {
                             Icon(
                                 Icons.AutoMirrored.Outlined.ArrowBack,
                                 "Back"
@@ -140,7 +145,7 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
                 composable("today") {
                     TodayScreen(
                         model,
-                        { nav.navigate("plan") },
+                        { comparingPlan = false; nav.navigate("plan") },
                         { nav.navigate("break") },
                         { nav.navigate(if (model.sessions.any { it.id == 1 }) "detail/1" else "records") })
                 }
@@ -149,6 +154,8 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
                         model.acceptedWindow,
                         model.contextUnavailable,
                         model.preferredWorkContext,
+                        comparing = comparingPlan,
+                        onStepChange = { comparingPlan = it },
                         onReturnToToday = { nav.popBackStack() }) { window, context ->
                         model.acceptedWindow = window
                         model.preferredWorkContext = context
