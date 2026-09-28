@@ -116,10 +116,10 @@ fun PrimaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolean 
 }
 
 @Composable
-fun SecondaryButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun SecondaryButton(text: String, modifier: Modifier = Modifier, enabled: Boolean = true, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick, modifier = modifier.fillMaxWidth().heightIn(min = 52.dp),
-        shape = UiShape.control,
+        enabled = enabled, shape = UiShape.control,
         contentPadding = PaddingValues(horizontal = UiSpace.related, vertical = UiSpace.compact)
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }
 }

@@ -51,25 +51,14 @@ import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import kotlin.math.ceil
 import kotlinx.coroutines.launch
-
-data class DemoSession(
-    val id: Int, val title: String, val site: String, val date: String,
-    val outdoorMinutes: Int, val breakMinutes: Int, val status: String, val checkInNote: String? = null
-)
-
-val initialSessions = listOf(
-    DemoSession(1, "Planting beds", "Birrarung Marr", "12 Jan 2026", 95, 15, "Needs review"),
-    DemoSession(2, "Mowing", "Carlton Gardens", "11 Jan 2026", 120, 20, "Reviewed"),
-    DemoSession(3, "Pruning", "Birrarung Marr", "10 Jan 2026", 80, 15, "Reviewed"),
-    DemoSession(4, "Planting beds", "Birrarung Marr", "9 Jan 2026", 140, 10, "Needs review"),
-    DemoSession(5, "Mowing", "Carlton Gardens", "8 Jan 2026", 105, 20, "Reviewed"),
-    DemoSession(6, "Pruning", "Birrarung Marr", "7 Jan 2026", 70, 15, "Reviewed")
-)
+import heatshield.data.MelbourneZone
+import heatshield.data.WorkSession
+import heatshield.data.WorkSite
 
 private val recordDateFormat = DateTimeFormatter.ofPattern("d MMM uuuu", Locale.ENGLISH)
 private val shortDateFormat = DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH)
 private val taskTypes = listOf("Planting beds", "Mowing", "Pruning")
-private fun DemoSession.localDate(): LocalDate = LocalDate.parse(date, recordDateFormat)
+private fun WorkSession.localDate(): LocalDate = LocalDate.parse(date, recordDateFormat)
 
 @Composable
 private fun RecordList(content: LazyListScope.() -> Unit) {
@@ -85,9 +74,9 @@ private fun RecordList(content: LazyListScope.() -> Unit) {
 
 @Composable
 fun RecordsScreen(
-    sessions: List<DemoSession>, onDetail: (Int) -> Unit, onAdd: () -> Unit, onSearch: () -> Unit
+    sessions: List<WorkSession>, onDetail: (Int) -> Unit, onAdd: () -> Unit, onSearch: () -> Unit
 ) {
-    val ordered = sessions.sortedWith(compareByDescending<DemoSession> { it.localDate() }.thenByDescending { it.id })
+    val ordered = sessions.sortedWith(compareByDescending<WorkSession> { it.localDate() }.thenByDescending { it.id })
     val largeText = LocalDensity.current.fontScale > 1.3f
     RecordList {
         item {
@@ -132,7 +121,7 @@ private fun RecordCount(count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SessionCard(session: DemoSession, onClick: () -> Unit) {
+private fun SessionCard(session: WorkSession, onClick: () -> Unit) {
     Card(
         onClick = onClick, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
         shape = RoundedCornerShape(16.dp),
@@ -161,7 +150,7 @@ private fun RecordStatus(status: String) {
 }
 
 @Composable
-fun SearchScreen(sessions: List<DemoSession>, onDetail: (Int) -> Unit) {
+fun SearchScreen(sessions: List<WorkSession>, onDetail: (Int) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
     var workType by rememberSaveable { mutableStateOf("All work") }
     var status by rememberSaveable { mutableStateOf("All statuses") }
@@ -174,8 +163,8 @@ fun SearchScreen(sessions: List<DemoSession>, onDetail: (Int) -> Unit) {
                 (status == "All statuses" || it.status == status) &&
                 (selectedDate == null || it.date == selectedDate)
     }.let { found ->
-        if (sort == "Longest outdoors") found.sortedWith(compareByDescending<DemoSession> { it.outdoorMinutes }.thenByDescending { it.localDate() })
-        else found.sortedWith(compareByDescending<DemoSession> { it.localDate() }.thenByDescending { it.id })
+        if (sort == "Longest outdoors") found.sortedWith(compareByDescending<WorkSession> { it.outdoorMinutes }.thenByDescending { it.localDate() })
+        else found.sortedWith(compareByDescending<WorkSession> { it.localDate() }.thenByDescending { it.id })
     }
     val activeFilters = listOfNotNull(
         workType.takeIf { it != "All work" }, status.takeIf { it != "All statuses" }, selectedDate
@@ -245,7 +234,8 @@ fun SearchScreen(sessions: List<DemoSession>, onDetail: (Int) -> Unit) {
         items(filtered, key = { it.id }) { session -> SessionCard(session) { onDetail(session.id) } }
     }
     if (showDate) RecordDateDialog(
-        selectedDate ?: sessions.firstOrNull()?.date ?: "12 Jan 2026", onDismiss = { showDate = false }
+        selectedDate ?: sessions.firstOrNull()?.date ?: LocalDate.now(MelbourneZone).format(recordDateFormat),
+        onDismiss = { showDate = false }
     ) { selectedDate = it; showDate = false }
 }
 
@@ -268,7 +258,7 @@ private fun RecordSort(sort: String, onSort: (String) -> Unit) {
 }
 
 @Composable
-fun SessionDetailScreen(session: DemoSession, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun SessionDetailScreen(session: WorkSession, onEdit: () -> Unit, onDelete: () -> Unit) {
     var confirmDelete by remember { mutableStateOf(false) }
     PageColumn {
         ScreenHeader(session.title, "${session.site} · ${session.date}")
@@ -319,10 +309,18 @@ fun SessionDetailScreen(session: DemoSession, onEdit: () -> Unit, onDelete: () -
 }
 
 @Composable
-fun EditRecordScreen(session: DemoSession?, onSave: (DemoSession) -> Unit) {
+fun EditRecordScreen(
+    session: WorkSession?,
+    onSave: (WorkSession) -> Unit,
+    saving: Boolean = false,
+    sites: List<String> = WorkSite.defaults.map { it.name },
+    defaultSite: String = "Birrarung Marr"
+) {
     var workType by rememberSaveable(session?.id) { mutableStateOf(session?.title ?: "Planting beds") }
-    var site by rememberSaveable(session?.id) { mutableStateOf(session?.site ?: "Birrarung Marr") }
-    var date by rememberSaveable(session?.id) { mutableStateOf(session?.date ?: "12 Jan 2026") }
+    var site by rememberSaveable(session?.id) { mutableStateOf(session?.site ?: defaultSite) }
+    var date by rememberSaveable(session?.id) {
+        mutableStateOf(session?.date ?: LocalDate.now(MelbourneZone).format(recordDateFormat))
+    }
     var outdoor by rememberSaveable(session?.id) { mutableStateOf(session?.outdoorMinutes?.toString() ?: "") }
     var breaks by rememberSaveable(session?.id) { mutableStateOf(session?.breakMinutes?.toString() ?: "") }
     var status by rememberSaveable(session?.id) { mutableStateOf(session?.status ?: "Needs review") }
@@ -340,6 +338,7 @@ fun EditRecordScreen(session: DemoSession?, onSave: (DemoSession) -> Unit) {
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
     fun save() {
+        if (saving) return
         attempted = true
         if (outdoorError || breakError || combinedError) {
             scope.launch {
@@ -351,15 +350,16 @@ fun EditRecordScreen(session: DemoSession?, onSave: (DemoSession) -> Unit) {
         } else {
             focusManager.clearFocus()
             onSave(
-                DemoSession(
-                    session?.id ?: 0,
-                    workType,
-                    site,
-                    date,
-                    outdoorValue!!,
-                    breakValue!!,
-                    status,
-                    session?.checkInNote
+                WorkSession(
+                    id = session?.id ?: 0,
+                    ownerId = session?.ownerId.orEmpty(),
+                    title = workType,
+                    site = site,
+                    date = date,
+                    outdoorMinutes = outdoorValue!!,
+                    breakMinutes = breakValue!!,
+                    status = status,
+                    checkInNote = session?.checkInNote
                 )
             )
         }
@@ -367,7 +367,7 @@ fun EditRecordScreen(session: DemoSession?, onSave: (DemoSession) -> Unit) {
     PageColumn {
         FormSection("Work details") {
             ChoiceField("Work type · required", workType, taskTypes, { workType = it })
-            ChoiceField("Work site · required", site, listOf("Birrarung Marr", "Carlton Gardens"), { site = it })
+            ChoiceField("Work site · required", site, (sites + site).distinct(), { site = it })
             OutlinedButton(
                 onClick = { showDate = true },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
@@ -399,7 +399,10 @@ fun EditRecordScreen(session: DemoSession?, onSave: (DemoSession) -> Unit) {
         }
         ChoiceField("Follow-up status", status, listOf("Needs review", "Reviewed"), { status = it })
         RecordCaption("Reviewed records are checked logs, not safety assessments.")
-        PrimaryButton(if (session == null) "Add record" else "Save changes", onClick = { save() })
+        PrimaryButton(
+            if (saving) "Saving…" else if (session == null) "Add record" else "Save changes",
+            enabled = !saving, onClick = { save() }
+        )
     }
     if (showDate) RecordDateDialog(date, onDismiss = { showDate = false }) { date = it; showDate = false }
 }
@@ -459,7 +462,7 @@ private fun RecordDateDialog(date: String, onDismiss: () -> Unit, onSelect: (Str
 private data class MinuteGroup(val date: LocalDate, val outdoor: Int, val breaks: Int, val count: Int)
 
 @Composable
-fun TrendsScreen(sessions: List<DemoSession>) {
+fun TrendsScreen(sessions: List<WorkSession>) {
     var period by rememberSaveable { mutableStateOf("Day") }
     var workType by rememberSaveable { mutableStateOf("All work") }
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }

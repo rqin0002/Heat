@@ -2,6 +2,12 @@
 
 package heatshield.ui
 
+import heatshield.data.*
+import heatshield.domain.ContextEngine
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.Locale
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -35,107 +41,50 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-data class WorkContext(
-    val work: String = "Planting beds", val effort: String = "Heavy effort",
-    val clothing: String = "Standard workwear", val dayMillis: Long = 1768176000000L,
-    val startHour: Int = 7, val startMinute: Int = 0
-)
-
 @Composable
-fun TodayScreen(model: PrototypeViewModel, onPlan: () -> Unit, onBreak: () -> Unit, onRecord: () -> Unit) {
-    var stale by model::contextUnavailable
-    val active = model.sessions.find { it.id == 1 }
-    val pending = active != null && !stale && !model.checkInDone
-    val largeText = LocalDensity.current.fontScale > 1.3f
+fun TodayScreen(model: HeatShieldViewModel, onPlan: () -> Unit, onBreak: () -> Unit, onRecord: () -> Unit) {
+    val active = model.activeSession
+    val snapshot = model.forecast
+    val fresh = snapshot?.isFresh(model.now) == true
+    val currentHour = Instant.ofEpochMilli(model.now).atZone(MelbourneZone).toLocalDateTime().withMinute(0).withSecond(0).withNano(0)
+    val current = snapshot?.hours?.find { it.localTime == currentHour }
     PageColumn(maxWidth = 840.dp) {
-        ScreenHeader(active?.site ?: "Birrarung Marr", eyebrow = "Monday, 12 January")
+        ScreenHeader(model.context.site, eyebrow = LocalDate.now(MelbourneZone).format(DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.ENGLISH)))
         SurfaceCard {
-            Text(
-                when {
-                    active == null -> "No active session"
-                    stale -> "Conditions unavailable"
-                    model.checkInDone -> "Check-in recorded"
-                    model.checkInDeferred -> "Follow-up needed"
-                    else -> "Check-in due"
-                },
-                Modifier.semantics { heading(); liveRegion = LiveRegionMode.Polite },
-                style = MaterialTheme.typography.headlineSmall,
-                color = if (pending || stale) Attention else Ink
-            )
-            Text(
-                when {
-                    active == null -> "Add a work session to keep a record of your shift."
-                    stale -> "Refresh conditions before comparing work windows."
-                    model.checkInDone -> "Your response is saved. Continue to follow your workplace heat procedure."
-                    model.checkInDeferred -> "${model.pauseConstraint}. Discuss a lighter task or a cooler location."
-                    else -> "${active.title} · ${active.outdoorMinutes} min outdoors"
-                }, style = MaterialTheme.typography.bodyLarge
-            )
-            PrimaryButton(
-                when {
-                    active == null -> "Open work records"
-                    stale -> "Retry forecast"
-                    model.checkInDone -> "View session record"
-                    else -> "Check in now"
-                }
-            ) {
-                when {
-                    active == null -> onRecord()
-                    stale -> stale = false
-                    model.checkInDone -> onRecord()
-                    else -> onBreak()
-                }
+            Text(if (active == null) "No work record for today" else model.decision.title,
+                Modifier.semantics { heading(); liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.headlineSmall)
+            Text(if (active == null) "Log your outdoor work before recording a break response." else model.decision.explanation)
+            PrimaryButton(if (active == null) "Add today's record" else "Check in now", onClick = if (active == null) onRecord else onBreak)
+            if (active != null) {
+                Text("${active.title} · ${active.outdoorMinutes} min work · ${active.breakMinutes} min breaks")
+                SecondaryButton("View session record", onClick = onRecord)
             }
         }
-        FormSection("Conditions", if (stale) "Sample unavailable" else "Sample conditions · 11:30") {
-            val metrics: @Composable () -> Unit = {
-                Column(
-                    Modifier.semantics(mergeDescendants = true) {},
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(if (stale) "—" else "31°C", style = MaterialTheme.typography.displaySmall)
-                    Text("Air temperature", style = MaterialTheme.typography.bodyLarge)
-                    if (!stale) Text("48% humidity", style = MaterialTheme.typography.bodySmall, color = Muted)
-                }
+        FormSection("Site forecast", if (fresh) "Open-Meteo · hourly forecast" else "Forecast unavailable or older than 60 minutes") {
+            if (fresh && current != null) {
+                Text("%.1f°C · %.0f%% humidity · UV %.1f".format(current.temperature, current.humidity, current.uv), style = MaterialTheme.typography.titleLarge)
             }
-            val ultraviolet: @Composable () -> Unit = {
-                Column(
-                    Modifier.semantics(mergeDescendants = true) {},
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(if (stale) "—" else "7", style = MaterialTheme.typography.displaySmall)
-                    Text("UV index", style = MaterialTheme.typography.bodyLarge)
-                    if (!stale) Text(
-                        "High · sun protection",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Attention
-                    )
-                }
-            }
-            if (largeText) Column(verticalArrangement = Arrangement.spacedBy(24.dp)) { metrics(); ultraviolet() }
-            else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                Box(Modifier.weight(1f)) { metrics() }
-                Box(Modifier.weight(1f)) { ultraviolet() }
-            }
+            if (snapshot != null && snapshot.fetchedAt > 0) Text("Last success: ${Instant.ofEpochMilli(snapshot.fetchedAt).atZone(MelbourneZone).format(DateTimeFormatter.ofPattern("d MMM HH:mm"))}", style = MaterialTheme.typography.bodySmall)
+            snapshot?.error?.let { Text(it, color = Attention) }
+            PrimaryButton(if (model.refreshing) "Refreshing…" else "Refresh forecast", enabled = !model.refreshing) { model.refreshForecast() }
         }
-        HorizontalDivider(color = Line)
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            SectionHeading("Your shift", action = "Review", onAction = onPlan)
-            Text(
-                "%02d:%02d–15:00".format(model.preferredWorkContext.startHour, model.preferredWorkContext.startMinute),
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                "${model.preferredWorkContext.work} · ${model.acceptedWindow}",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                "Preferred window · discuss before changing work",
-                style = MaterialTheme.typography.bodySmall,
-                color = Muted
-            )
-            Text(active?.let { "${it.outdoorMinutes} min work · ${it.breakMinutes} min logged breaks" }
-                ?: "No session recorded", style = MaterialTheme.typography.bodySmall, color = Muted)
+        FormSection("Your shift") {
+            Text(model.plan?.let { "${it.context.date} · ${it.work} · ${it.window}" } ?: "No preferred work window saved.")
+            PrimaryButton("Plan work windows", onClick = onPlan)
+            if (model.plan != null) SecondaryButton("Cancel saved plan", onClick = model::cancelPlan)
+            Text("Compare forecast conditions and discuss changes with your supervisor.", style = MaterialTheme.typography.bodySmall, color = Muted)
+        }
+        FormSection("Historical sensor replay", "City of Melbourne · accelerated every 20 seconds") {
+            val reading = model.reading
+            if (reading == null) Text("No sensor reading available.") else {
+                Text("%.1f°C · %.1f%% humidity".format(reading.temperature, reading.humidity), style = MaterialTheme.typography.titleLarge)
+                Text("Observed ${reading.observedAtLocal} at ${reading.sourceLocation}", style = MaterialTheme.typography.bodySmall)
+                Text("Row ${model.replayIndex + 1} of ${model.replayCount} · emitted ${Instant.ofEpochMilli(model.emittedAt).atZone(MelbourneZone).format(DateTimeFormatter.ofPattern("HH:mm:ss"))}", style = MaterialTheme.typography.bodySmall)
+                Text("Historical observations for exploring context responses. These are not today's measurements.", color = Muted)
+                SecondaryButton(if (model.replayEnabled) "Pause replay" else "Resume replay", onClick = model::toggleReplay)
+                SecondaryButton("Next sensor reading", onClick = model::advanceReplay)
+                SecondaryButton("Replay from shift start", onClick = model::jumpReplayToShift)
+            }
         }
     }
 }
@@ -143,7 +92,10 @@ fun TodayScreen(model: PrototypeViewModel, onPlan: () -> Unit, onBreak: () -> Un
 @Composable
 fun ShiftPlanScreen(
     acceptedWindow: String,
-    contextUnavailable: Boolean = false,
+    forecast: ForecastSnapshot? = null,
+    refreshing: Boolean = false,
+    sites: List<String> = WorkSite.defaults.map { it.name },
+    onRefresh: (String) -> Unit = {},
     initialContext: WorkContext = WorkContext(),
     comparing: Boolean,
     onStepChange: (Boolean) -> Unit,
@@ -154,6 +106,7 @@ fun ShiftPlanScreen(
     var effort by rememberSaveable { mutableStateOf(initialContext.effort) }
     var clothing by rememberSaveable { mutableStateOf(initialContext.clothing) }
     var selected by rememberSaveable { mutableStateOf(acceptedWindow) }
+    var site by rememberSaveable { mutableStateOf(initialContext.site) }
     var dayMillis by rememberSaveable { mutableLongStateOf(initialContext.dayMillis) }
     var startHour by rememberSaveable { mutableIntStateOf(initialContext.startHour) }
     var startMinute by rememberSaveable { mutableIntStateOf(initialContext.startMinute) }
@@ -161,9 +114,14 @@ fun ShiftPlanScreen(
     var timeOpen by remember { mutableStateOf(false) }
     val dateLabel =
         Instant.ofEpochMilli(dayMillis).atZone(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy"))
-    val earlyFits = startHour * 60 + startMinute <= 480
-    val lateFits = startHour * 60 + startMinute <= 720
-    val demoDate = Instant.ofEpochMilli(dayMillis).atZone(ZoneOffset.UTC).toLocalDate().toString() == "2026-01-12"
+    val selectedContext = WorkContext(work, effort, clothing, dayMillis, startHour, startMinute, site)
+    var clockNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(comparing) {
+        while (comparing) { clockNow = System.currentTimeMillis(); kotlinx.coroutines.delay(15_000) }
+    }
+    val windows = ContextEngine.compare(selectedContext, forecast, clockNow)
+    val hours = forecast?.hours.orEmpty().filter { it.localTime?.toLocalDate() == selectedContext.date && it.localTime!!.hour in startHour..15 }
+    LaunchedEffect(windows) { if (windows.none { it.label == selected }) selected = windows.firstOrNull()?.label.orEmpty() }
     val largeText = LocalDensity.current.fontScale > 1.3f
     val shortWindow = LocalWindowInfo.current.containerSize.height / LocalDensity.current.density < 500
     val compactDialog = largeText || shortWindow
@@ -195,7 +153,7 @@ fun ShiftPlanScreen(
                     Spacer(Modifier.width(12.dp))
                     Text("Shift · %02d:%02d–15:00".format(startHour, startMinute), Modifier.weight(1f))
                 }
-                ChoiceField("Work site", "Birrarung Marr", listOf("Birrarung Marr"), {})
+                ChoiceField("Work site", site, sites, { site = it })
             }
             FormSection("Work details") {
                 ChoiceField("Work type", work, listOf("Planting beds", "Mowing", "Pruning"), { work = it })
@@ -210,55 +168,25 @@ fun ShiftPlanScreen(
                     listOf("Standard workwear", "Heavy protective clothing"),
                     { clothing = it })
             }
-            PrimaryButton("Compare work windows") { onStepChange(true) }
-        } else if (contextUnavailable || !demoDate || !lateFits) {
+            PrimaryButton("Compare work windows") { onRefresh(site); onStepChange(true) }
+        } else if (windows.isEmpty()) {
             SurfaceCard {
-                Text(
-                    "No comparison available",
-                    Modifier.semantics { heading() },
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Attention
-                )
-                Text(
-                    if (contextUnavailable) "Refresh conditions on Today, then try again."
-                    else if (!demoDate) "Sample forecasts are available for 12 January 2026 only."
-                    else "Neither two-hour window fits after your shift starts."
-                )
+                Text("No comparison available", Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineSmall, color = Attention)
+                Text(if (refreshing) "Loading the site's forecast…" else
+                    "A complete, fresh two-hour forecast is needed for the selected date, site and remaining shift. Choose an upcoming date or refresh conditions.")
+                forecast?.error?.let { Text(it, color = Attention) }
             }
-            PrimaryButton(if (contextUnavailable) "Return to Today" else "Change work context") {
-                if (contextUnavailable) onReturnToToday() else onStepChange(false)
-            }
-            if (contextUnavailable) SecondaryButton("Change work context") { onStepChange(false) }
+            PrimaryButton(if (refreshing) "Refreshing…" else "Retry forecast", enabled = !refreshing) { onRefresh(site) }
+            SecondaryButton("Change work context") { onStepChange(false) }
+            SecondaryButton("Return to Today", onClick = onReturnToToday)
         } else {
-            Text("$work · $effort", style = MaterialTheme.typography.bodyLarge)
-            FormSection("Air temperature", "Sample forecast · 12 January · °C") { ForecastChart() }
+            Text("$work · $effort · $clothing", style = MaterialTheme.typography.bodyLarge)
+            FormSection("Air temperature", "Open-Meteo · $dateLabel · °C") { ForecastChart(hours) }
             Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (earlyFits) WindowChoice("08:00–10:00", "24–27°C · UV 3–5", selected == "08:00–10:00") {
-                    selected = "08:00–10:00"
-                }
-                WindowChoice("12:00–14:00", "31–34°C · UV 7–8", selected == "12:00–14:00") { selected = "12:00–14:00" }
+                windows.forEach { window -> WindowChoice(window.label, window.summary, selected == window.label) { selected = window.label } }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    if (earlyFits) "Discuss the earlier window" else "Review the later window",
-                    Modifier.semantics { heading() },
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    if (!earlyFits) "The cooler window is outside your shift. Discuss lighter work or a different arrangement."
-                    else if (effort == "Heavy effort" || clothing == "Heavy protective clothing") "Heavy effort or protective clothing makes a cooler work arrangement especially relevant."
-                    else "Plan lighter tasks around the conditions and available shade.",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    "Sun protection applies in both windows. Agree changes with your supervisor.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Muted
-                )
-            }
-            PrimaryButton("Save preferred window", enabled = earlyFits || selected == "12:00–14:00") {
-                onAccept(selected, WorkContext(work, effort, clothing, dayMillis, startHour, startMinute))
-            }
+            Text("The first window has the lowest relative forecast burden for your work context. This comparison does not establish safe exposure or replace workplace procedures.")
+            PrimaryButton("Save preferred window", enabled = windows.any { it.label == selected }) { onAccept(selected, selectedContext) }
             SecondaryButton("Change work context") { onStepChange(false) }
         }
     }
@@ -392,165 +320,73 @@ private fun WindowChoice(window: String, metrics: String, selected: Boolean, onS
 }
 
 @Composable
-private fun ForecastChart() {
-    val values = listOf(24f, 27f, 31f, 34f, 32f)
-    val times = listOf("08:00", "10:00", "12:00", "14:00", "16:00")
+private fun ForecastChart(hours: List<ForecastHour>) {
+    if (hours.isEmpty()) return
+    val values = hours.map { it.temperature.toFloat() }
+    val minimum = values.min() - 2f
+    val maximum = values.max() + 2f
     val scale = LocalDensity.current.fontScale.coerceAtLeast(1f)
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val chartWidth = maxOf(maxWidth, 300.dp * scale)
-        val plotHeight = 112.dp * scale
-        Column(Modifier.horizontalScroll(rememberScrollState())) {
-            Column(Modifier.width(chartWidth), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(Modifier.fillMaxWidth()) {
-                    Spacer(Modifier.width(40.dp * scale))
-                    values.forEach { value ->
-                        Text(
-                            "${value.toInt()}°",
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = PrimaryAction,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-                Row(Modifier.fillMaxWidth()) {
-                    Column(
-                        Modifier.width(40.dp * scale).height(plotHeight),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        listOf("36°", "29°", "22°").forEach {
-                            Text(
-                                it,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Muted
-                            )
-                        }
-                    }
-                    Canvas(Modifier.weight(1f).height(plotHeight).padding(vertical = 8.dp).semantics {
-                        contentDescription =
-                            "Sample air temperature: 24 degrees Celsius at 08:00, 27 at 10:00, 31 at 12:00, 34 at 14:00 and 32 at 16:00."
-                    }) {
-                        val left = size.width / (values.size * 2f)
-                        val right = size.width - left
-                        for (fraction in listOf(0f, 0.5f, 1f)) {
-                            val y = size.height * fraction
-                            drawLine(Line, Offset(left, y), Offset(right, y), 1.dp.toPx())
-                        }
-                        val points = values.mapIndexed { index, value ->
-                            Offset(
-                                left + index * (right - left) / (values.size - 1),
-                                size.height * (36f - value) / 14f
-                            )
-                        }
-                        points.zipWithNext()
-                            .forEach { (a, b) -> drawLine(PrimaryAction, a, b, 3.dp.toPx(), StrokeCap.Round) }
-                        points.forEach { drawCircle(PrimaryAction, 4.dp.toPx(), it) }
-                    }
-                }
-                Row(Modifier.fillMaxWidth()) {
-                    Spacer(Modifier.width(40.dp * scale))
-                    times.forEach {
-                        Text(
-                            it,
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Muted,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("%.1f–%.1f°C".format(values.min(), values.max()), style = MaterialTheme.typography.bodyMedium)
+        Canvas(Modifier.fillMaxWidth().height(128.dp * scale).semantics {
+            contentDescription = hours.joinToString { "${it.time.substringAfter('T')}: ${it.temperature} degrees Celsius" }
+        }) {
+            val inset = 8.dp.toPx()
+            val points = values.mapIndexed { index, value -> Offset(
+                inset + index * (size.width - 2 * inset) / (values.size - 1).coerceAtLeast(1),
+                inset + (size.height - 2 * inset) * (maximum - value) / (maximum - minimum)) }
+            points.zipWithNext().forEach { (a, b) -> drawLine(PrimaryAction, a, b, 3.dp.toPx(), StrokeCap.Round) }
+            points.forEach { drawCircle(PrimaryAction, 4.dp.toPx(), it) }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(hours.first().time.substringAfter('T')); Text(hours.last().time.substringAfter('T'))
         }
     }
 }
 
 @Composable
-fun BreakScreen(
-    outdoorMinutes: Int = 95,
-    workTitle: String = "Planting beds",
-    onRecord: (Boolean, String) -> Unit,
-    onReturn: () -> Unit
-) {
+fun BreakScreen(model: HeatShieldViewModel, onReturn: () -> Unit) {
     var choice by rememberSaveable { mutableStateOf("Cooler place available") }
-    var started by rememberSaveable { mutableStateOf(false) }
     var confirmed by rememberSaveable { mutableStateOf(false) }
+    val active = model.activeSession
+    val started = model.breakStartedAt > 0
     PageColumn(maxWidth = 640.dp) {
-        if (!started && !confirmed) {
-            ScreenHeader("Can you take a cooler pause?", "$outdoorMinutes min logged · $workTitle")
+        if (active == null && !started) {
+            ScreenHeader("No work record for today", "Add a work record before checking in.")
+            PrimaryButton("Return to Today", onClick = onReturn)
+        } else if (confirmed) {
+            ScreenHeader("Response saved", "Your session record and trends have been updated.")
+            PrimaryButton("Return to Today", onClick = onReturn)
+        } else if (started) {
+            ScreenHeader("Break in progress")
+            val seconds = model.breakElapsedSeconds
+            Text("%02d:%02d".format(seconds / 60, seconds % 60), style = MaterialTheme.typography.displaySmall)
+            Text("Measured time only. Finishing adds whole elapsed minutes to this session.")
+            PrimaryButton("Finish break", enabled = !model.busy) {
+                model.recordResponse(true, choice) { confirmed = true }
+            }
+            SecondaryButton("Cancel timer", onClick = model::clearBreak)
+        } else {
+            ScreenHeader("Can you take a cooler pause?", "${active?.outdoorMinutes} min logged · ${active?.title}")
+            Text(model.decision.explanation)
             Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf("Cooler place available", "No cooler place available", "Cannot pause yet").forEach { option ->
-                    Surface(
-                        shape = UiShape.control, color = if (choice == option) SelectedSurface else Color.White,
-                        border = BorderStroke(
-                            if (choice == option) 2.dp else 1.dp,
-                            if (choice == option) PrimaryAction else Line
-                        )
-                    ) {
-                        Row(
-                            Modifier.fillMaxWidth().heightIn(min = 64.dp)
-                                .selectable(
-                                    selected = choice == option,
-                                    role = Role.RadioButton,
-                                    onClick = { choice = option })
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = choice == option, onClick = null)
-                            Text(option, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-                        }
+                    Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).selectable(selected = choice == option,
+                        role = Role.RadioButton, onClick = { choice = option }).padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        RadioButton(selected = choice == option, onClick = null); Text(option)
                     }
                 }
             }
-            Text(
-                if (choice == "Cooler place available") "Move to a cooler area and follow your workplace rest and hydration guidance."
-                else "Discuss a lighter task or a cooler location with your supervisor. Your follow-up will stay open.",
-                Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyLarge
-            )
-            PrimaryButton(if (choice == "Cooler place available") "Start break preview" else "Record this response") {
-                if (choice == "Cooler place available") started = true else {
-                    onRecord(false, choice)
-                    confirmed = true
-                }
+            Text(if (choice == "Cooler place available") "Move to a cooler area and follow workplace rest and hydration guidance."
+                else "Discuss a lighter task or a cooler location. This response keeps the follow-up open.")
+            PrimaryButton(if (choice == "Cooler place available") "Start break" else "Record this response", enabled = !model.busy) {
+                if (choice == "Cooler place available") model.startBreak()
+                else model.recordResponse(false, choice) { confirmed = true }
             }
-        } else if (started && !confirmed) {
-            ScreenHeader("Break in progress")
-            Text("00:00", style = MaterialTheme.typography.displaySmall, color = PrimaryAction)
-            Text("Timer preview · no recovery target", style = MaterialTheme.typography.bodySmall, color = Muted)
-            Text(
-                "Follow your workplace heat procedure. A check-in cannot tell you when it is safe to return to work.",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            PrimaryButton("Finish break preview") {
-                onRecord(true, choice)
-                confirmed = true
-            }
-            OutlinedButton(
-                onClick = { started = false },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                shape = UiShape.control
-            ) { Text("Change my response") }
-        } else {
-            SurfaceCard {
-                Text(
-                    if (started) "Break check-in completed" else "Follow-up remains open",
-                    Modifier.semantics { heading(); liveRegion = LiveRegionMode.Polite },
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = if (started) Ink else Attention
-                )
-                Text(
-                    if (started) "Your response is recorded. No break minutes were added." else "$choice. A work adjustment still needs discussion.",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-            PrimaryButton("Return to Today", onClick = onReturn)
         }
         Disclosure("Why check in?") {
-            Text(
-                "The planned check-in is due after heavy work in changing conditions. Use your workplace heat procedure; this app does not measure body temperature or certify recovery.",
-                style = MaterialTheme.typography.bodySmall,
-                color = Muted
-            )
+            Text("HeatShield combines a labelled historical sensor replay with your work context and response. It does not measure body temperature, diagnose heat illness or certify recovery. Follow your workplace heat procedure.")
         }
     }
 }

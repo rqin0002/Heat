@@ -19,19 +19,11 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
-
-class PrototypeViewModel : ViewModel() {
-    val sessions = mutableStateListOf<DemoSession>().apply { addAll(initialSessions) }
-    var acceptedWindow by mutableStateOf("08:00–10:00")
-    var preferredWorkContext by mutableStateOf(WorkContext())
-    var checkInDone by mutableStateOf(false)
-    var checkInDeferred by mutableStateOf(false)
-    var contextUnavailable by mutableStateOf(false)
-    var pauseConstraint by mutableStateOf("")
-}
 
 data class MainDestination(val route: String, val title: String, val icon: ImageVector)
 
@@ -43,13 +35,29 @@ val mainDestinations = listOf(
 )
 
 @Composable
-fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
+fun HeatShieldApp(model: HeatShieldViewModel = viewModel()) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle, model.ownerId) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) model.setVisible(true)
+            if (event == Lifecycle.Event.ON_STOP) model.setVisible(false)
+        }
+        lifecycle.addObserver(observer)
+        model.setVisible(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
+        onDispose { lifecycle.removeObserver(observer); model.setVisible(false) }
+    }
+    key(model.ownerId) { AppNavigation(model) }
+}
+
+@Composable
+private fun AppNavigation(model: HeatShieldViewModel) {
+    androidx.activity.compose.BackHandler(enabled = model.busy) { }
     var comparingPlan by rememberSaveable { mutableStateOf(false) }
     val fontScale = LocalDensity.current.fontScale
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "login"
-    val signedOut = route == "login" || route == "signup"
+    val signedOut = model.ownerId == null
     val parent = when {
         route.startsWith("detail") || route.startsWith("edit") || route == "search" -> "records"
         route == "plan" || route == "break" -> "today"
@@ -70,8 +78,9 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
         else -> 720.dp
     }
 
-    fun enterDemo() {
-        nav.navigate("today") { popUpTo("login") { inclusive = true }; launchSingleTop = true }
+    val start = if (signedOut) "login" else "today"
+    LaunchedEffect(model.loading, model.needsOnboarding) {
+        if (!signedOut && !model.loading && model.needsOnboarding) nav.navigate("profile") { launchSingleTop = true }
     }
     Scaffold(
         containerColor = Paper,
@@ -88,7 +97,7 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
                     },
                     expandedHeight = 64.dp * fontScale.coerceIn(1f, 2f),
                     navigationIcon = {
-                        if (isSecondary || route == "signup") IconButton(onClick = {
+                        if (isSecondary || route == "signup") IconButton(enabled = !model.busy, onClick = {
                             if (route == "plan" && comparingPlan) comparingPlan = false else nav.popBackStack()
                         }) {
                             Icon(
@@ -114,11 +123,11 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
                             NavigationBarItem(
                                 modifier = Modifier.testTag("nav_${dest.route}"),
                                 selected = parent == dest.route,
+                                enabled = !model.busy,
                                 onClick = {
                                     nav.navigate(dest.route) {
-                                        popUpTo("today") {
-                                            saveState = true
-                                        }; launchSingleTop = true; restoreState = true
+                                        popUpTo("today")
+                                        launchSingleTop = true
                                     }
                                 },
                                 icon = { Icon(dest.icon, null, Modifier.size(22.dp)) },
@@ -138,45 +147,41 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
             }
         }
     ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
-            NavHost(nav, startDestination = "login") {
-                composable("login") { LoginScreen(onLogin = { enterDemo() }, onSignUp = { nav.navigate("signup") }) }
-                composable("signup") { SignUpScreen(onCreated = { enterDemo() }, onLogin = { nav.popBackStack() }) }
+        Column(Modifier.padding(padding).fillMaxSize()) {
+            if (model.message != null && route != "login") Surface(color = MaterialTheme.colorScheme.errorContainer) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(model.message.orEmpty(), Modifier.weight(1f))
+                    TextButton(onClick = model::dismissMessage) { Text("Dismiss") }
+                }
+            }
+            if (model.loading) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                return@Column
+            }
+            NavHost(nav, startDestination = start) {
+                composable("login") { LoginScreen(
+                    onLogin = { email, password -> model.authenticate(email, password, false) },
+                    onSignUp = { model.dismissMessage(); nav.navigate("signup") }, onLocal = model::enterLocal,
+                    onReset = model::resetPassword, configured = model.firebaseConfigured, busy = model.busy, message = model.message) }
+                composable("signup") { SignUpScreen(
+                    onCreated = { email, password -> model.authenticate(email, password, true) },
+                    onLogin = { nav.popBackStack() }, configured = model.firebaseConfigured, busy = model.busy) }
                 composable("today") {
-                    TodayScreen(
-                        model,
+                    LaunchedEffect(model.context.site) { model.previewForecast(model.context.site) }
+                    TodayScreen(model,
                         { comparingPlan = false; nav.navigate("plan") },
                         { nav.navigate("break") },
-                        { nav.navigate(if (model.sessions.any { it.id == 1 }) "detail/1" else "records") })
+                        { nav.navigate(model.activeSession?.let { "detail/${it.id}" } ?: "edit/0") })
                 }
                 composable("plan") {
                     ShiftPlanScreen(
-                        model.acceptedWindow,
-                        model.contextUnavailable,
-                        model.preferredWorkContext,
-                        comparing = comparingPlan,
-                        onStepChange = { comparingPlan = it },
-                        onReturnToToday = { nav.popBackStack() }) { window, context ->
-                        model.acceptedWindow = window
-                        model.preferredWorkContext = context
-                        nav.popBackStack()
-                    }
+                        acceptedWindow = model.plan?.window.orEmpty(), initialContext = model.plannedContext,
+                        forecast = model.forecast, refreshing = model.refreshing, sites = model.sites.map { it.name },
+                        onRefresh = model::previewForecast, comparing = comparingPlan,
+                        onStepChange = { comparingPlan = it }, onReturnToToday = { nav.popBackStack() },
+                        onAccept = { window, context -> model.savePlan(window, context) { nav.popBackStack() } })
                 }
-                composable("break") {
-                    BreakScreen(
-                        model.sessions.find { it.id == 1 }?.outdoorMinutes ?: 0,
-                        model.sessions.find { it.id == 1 }?.title ?: "Outdoor work",
-                        onRecord = { done, response ->
-                            model.checkInDone = done; model.checkInDeferred = !done
-                            model.pauseConstraint = if (done) "" else response
-                            val index = model.sessions.indexOfFirst { it.id == 1 }
-                            if (index >= 0) model.sessions[index] = model.sessions[index].copy(
-                                status = if (done) "Reviewed" else "Needs review",
-                                checkInNote = if (done) "Break check-in completed. No duration was added." else "$response. A work adjustment needs discussion. The follow-up remains open."
-                            )
-                        },
-                        onReturn = { nav.popBackStack() })
-                }
+                composable("break") { BreakScreen(model) { nav.popBackStack() } }
                 composable("records") {
                     RecordsScreen(
                         model.sessions,
@@ -191,13 +196,9 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
                     if (session != null) SessionDetailScreen(
                         session,
                         { nav.navigate("edit/${session.id}") },
-                        {
-                            model.sessions.remove(session); nav.navigate("records") {
-                            popUpTo("records") {
-                                inclusive = true
-                            }
-                        }
-                        })
+                        { model.deleteRecord(session.id) {
+                            nav.navigate("records") { popUpTo("records") { inclusive = true }; launchSingleTop = true }
+                        } })
                     else PageColumn {
                         Text("This record is no longer available."); PrimaryButton("Return to records") {
                         nav.navigate(
@@ -209,17 +210,15 @@ fun HeatShieldApp(model: PrototypeViewModel = viewModel()) {
                 composable("edit/{id}") { edit ->
                     val id = edit.arguments?.getString("id")?.toIntOrNull()
                     val session = model.sessions.find { it.id == id }
-                    EditRecordScreen(session) { updated ->
-                        val existing = model.sessions.indexOfFirst { it.id == id }
-                        if (existing >= 0) model.sessions[existing] = updated else model.sessions.add(
-                            0,
-                            updated.copy(id = (model.sessions.maxOfOrNull { it.id } ?: 0) + 1)
-                        )
-                        nav.popBackStack()
-                    }
+                    if (id != 0 && session == null) PageColumn { Text("This record is no longer available.") }
+                    else EditRecordScreen(session, onSave = { updated ->
+                        model.saveRecord(updated) { nav.popBackStack() }
+                    }, saving = model.busy, sites = model.sites.map { it.name }, defaultSite = model.preferences.site)
                 }
                 composable("trends") { TrendsScreen(model.sessions) }
-                composable("profile") { ProfileScreen { nav.navigate("login") { popUpTo(0) { inclusive = true } } } }
+                composable("profile") { ProfileScreen(model, onSaved = {
+                    nav.navigate("today") { popUpTo("today") { inclusive = true } }
+                }, onSignOut = model::signOut) }
             }
         }
     }

@@ -44,183 +44,147 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LoginScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
-    var email by rememberSaveable { mutableStateOf("worker@example.com") }
-    var password by rememberSaveable { mutableStateOf("Shade before midday") }
+fun LoginScreen(
+    onLogin: (String, String) -> Unit, onSignUp: () -> Unit, onLocal: () -> Unit,
+    onReset: (String) -> Unit, configured: Boolean, busy: Boolean, message: String?
+) {
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by androidx.compose.runtime.remember { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var submitted by rememberSaveable { mutableStateOf(false) }
-    var resetPreview by rememberSaveable { mutableStateOf(false) }
+    var resetOpen by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    val emailError = if (submitted && !isDemoEmail(email)) "Enter a valid email address." else null
+    val emailError = if (submitted && !isValidEmail(email)) "Enter a valid email address." else null
     val passwordError = if (submitted && password.isBlank()) "Enter a password." else null
     val submit: () -> Unit = {
         submitted = true
-        if (isDemoEmail(email) && password.isNotBlank()) {
-            focusManager.clearFocus()
-            onLogin()
+        if (configured && !busy && isValidEmail(email) && password.isNotBlank()) {
+            focusManager.clearFocus(); onLogin(email.trim(), password)
         }
     }
-
     PageColumn(maxWidth = 480.dp) {
-        ScreenHeader("Log in")
+        ScreenHeader("Log in", "Plan your outdoor work and keep a record of your check-ins.")
+        if (!configured) Text("Cloud accounts are not configured on this build. You can keep records on this device.", color = Muted)
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             EmailField(email, { email = it }, emailError)
-            PasswordField(
-                value = password,
-                onValueChange = { password = it },
-                visible = passwordVisible,
-                onVisibilityChange = { passwordVisible = !passwordVisible },
-                errorMessage = passwordError,
-                onDone = submit
-            )
-            PrimaryButton("Log in to demo", onClick = submit)
-            SecondaryButton("Forgot password?") {
-                focusManager.clearFocus()
-                resetPreview = true
-            }
+            PasswordField(password, { password = it }, passwordVisible, { passwordVisible = !passwordVisible }, passwordError, onDone = submit)
+            PrimaryButton(if (busy) "Please wait…" else "Log in", enabled = configured && !busy, onClick = submit)
+            SecondaryButton("Forgot password?") { focusManager.clearFocus(); resetOpen = true }
         }
-        AuthAlternatives(accountAction = "Create account", onAccountAction = onSignUp, onExplore = onLogin)
+        message?.let { Text(it, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = Attention) }
+        SecondaryButton("Create account", enabled = !busy, onClick = onSignUp)
+        SecondaryButton("Continue on this device", enabled = !busy, onClick = onLocal)
+        Text("Device mode has no cloud identity. Its records stay separate from signed-in accounts.", style = MaterialTheme.typography.bodySmall, color = Muted)
     }
-    if (resetPreview) {
-        AlertDialog(
-            onDismissRequest = { resetPreview = false },
-            title = { Text("Password reset preview") },
-            text = { Text("Password reset is not connected in this demo. No email will be sent.") },
-            confirmButton = {
-                PrimaryButton("Dismiss", onClick = { resetPreview = false })
-            }
-        )
-    }
+    if (resetOpen) AlertDialog(
+        onDismissRequest = { resetOpen = false }, title = { Text("Reset password") },
+        text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Enter your account email. Requesting a reset sends an email if the account is eligible.")
+            EmailField(email, { email = it }, if (email.isNotBlank() && !isValidEmail(email)) "Enter a valid email address." else null)
+            if (!configured) Text("Cloud accounts are not configured on this build.")
+        } },
+        confirmButton = { PrimaryButton("Send reset email", enabled = configured && !busy && isValidEmail(email)) {
+            onReset(email.trim()); resetOpen = false
+        } },
+        dismissButton = { SecondaryButton("Cancel") { resetOpen = false } }
+    )
 }
 
 @Composable
-fun SignUpScreen(onCreated: () -> Unit, onLogin: () -> Unit) {
-    var email by rememberSaveable { mutableStateOf("worker@example.com") }
-    var password by rememberSaveable { mutableStateOf("") }
+fun SignUpScreen(
+    onCreated: (String, String) -> Unit, onLogin: () -> Unit, configured: Boolean, busy: Boolean
+) {
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by androidx.compose.runtime.remember { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var submitted by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val passwordInvalid = password.length < 12
-    val showPasswordError = password.isNotEmpty() && passwordInvalid
-    val emailError = if (submitted && !isDemoEmail(email)) "Enter a valid email address." else null
     val submit: () -> Unit = {
-        if (!passwordInvalid) {
-            submitted = true
-            if (isDemoEmail(email)) {
-                focusManager.clearFocus()
-                onCreated()
-            }
+        submitted = true
+        if (configured && !busy && !passwordInvalid && isValidEmail(email)) {
+            focusManager.clearFocus(); onCreated(email.trim(), password)
         }
     }
-
     PageColumn(maxWidth = 480.dp) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            EmailField(email, { email = it }, emailError)
-            PasswordField(
-                value = password,
-                onValueChange = { password = it },
-                visible = passwordVisible,
-                onVisibilityChange = { passwordVisible = !passwordVisible },
-                errorMessage = if (showPasswordError) "Use at least 12 characters." else null,
-                hint = if (password.isEmpty()) "Use at least 12 characters." else null,
-                onDone = submit
-            )
-            PrimaryButton("Create demo account", enabled = !passwordInvalid, onClick = submit)
+        ScreenHeader("Create account")
+        FormSection("Your account", "All fields required") {
+            EmailField(email, { email = it }, if (submitted && !isValidEmail(email)) "Enter a valid email address." else null)
+            PasswordField(password, { password = it }, passwordVisible, { passwordVisible = !passwordVisible },
+                if (password.isNotEmpty() && passwordInvalid) "Use at least 12 characters." else null,
+                hint = if (password.isEmpty()) "Use at least 12 characters." else null, onDone = submit)
+            PrimaryButton(if (busy) "Creating account…" else "Create account", enabled = configured && !busy && !passwordInvalid, onClick = submit)
         }
-        AuthAlternatives(accountAction = "Log in", onAccountAction = onLogin, onExplore = onCreated)
+        if (!configured) Text("Cloud accounts are not configured on this build.", color = Muted)
+        SecondaryButton("Log in", enabled = !busy, onClick = onLogin)
     }
 }
 
 @Composable
-fun ProfileScreen(onSignOut: () -> Unit) {
-    var site by rememberSaveable { mutableStateOf("Birrarung Marr") }
-    var effort by rememberSaveable { mutableStateOf("Moderate effort") }
-    var clothing by rememberSaveable { mutableStateOf("Standard workwear") }
-    var reminders by rememberSaveable { mutableStateOf(true) }
+fun ProfileScreen(model: HeatShieldViewModel, onSaved: () -> Unit, onSignOut: () -> Unit) {
+    val prefs = model.preferences
+    var site by rememberSaveable(prefs.ownerId, prefs.site) { mutableStateOf(prefs.site) }
+    var effort by rememberSaveable(prefs.ownerId, prefs.effort) { mutableStateOf(prefs.effort) }
+    var clothing by rememberSaveable(prefs.ownerId, prefs.clothing) { mutableStateOf(prefs.clothing) }
+    var reminders by rememberSaveable(prefs.ownerId, prefs.reminders) { mutableStateOf(prefs.reminders) }
     var saved by rememberSaveable { mutableStateOf(false) }
-    var submitted by rememberSaveable { mutableStateOf(false) }
-    val focusManager = LocalFocusManager.current
-    val siteError = if (submitted && site.isBlank()) "Enter your work site." else null
-
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var notificationAllowed by androidx.compose.runtime.remember {
+        mutableStateOf(androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled())
+    }
+    val permission = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { allowed -> notificationAllowed = allowed }
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    androidx.compose.runtime.DisposableEffect(lifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                notificationAllowed = androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
     PageColumn {
-        FormSection("Work preferences") {
-            OutlinedTextField(
-                value = site,
-                onValueChange = { site = it; saved = false },
-                label = { Text("Work site") },
-                singleLine = true,
-                isError = siteError != null,
-                supportingText = if (siteError != null) ({ FieldMessage(siteError, isError = true) }) else null,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                modifier = Modifier.fillMaxWidth().testTag("profile_site").semantics {
-                    if (siteError != null) error(siteError)
-                },
-                shape = UiShape.control
-            )
-            ChoiceField(
-                label = "Typical work effort",
-                value = effort,
-                options = listOf("Light effort", "Moderate effort", "Heavy effort"),
-                onChange = { effort = it; saved = false }
-            )
-            ChoiceField(
-                label = "Protective clothing",
-                value = clothing,
-                options = listOf("Standard workwear", "Heavy protective clothing"),
-                onChange = { clothing = it; saved = false }
-            )
+        if (model.needsOnboarding) ScreenHeader("Set up your work context", "Choose your usual site and work details before planning a shift.")
+        Text(if (model.ownerId == "local") "Device mode · records stored on this device" else model.email ?: "Signed in")
+        FormSection("Work preferences", "All fields required") {
+            ChoiceField("Work site", site, model.sites.map { it.name }, { site = it; saved = false })
+            ChoiceField("Typical work effort", effort, listOf("Light effort", "Moderate effort", "Heavy effort"), { effort = it; saved = false })
+            ChoiceField("Protective clothing", clothing, listOf("Standard workwear", "Heavy protective clothing"), { clothing = it; saved = false })
             Text("Follow workplace PPE requirements.", style = MaterialTheme.typography.bodySmall, color = Muted)
         }
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                    .toggleable(
-                        value = reminders,
-                        role = Role.Switch,
-                        onValueChange = { reminders = it; saved = false }
-                    )
-                    .semantics { contentDescription = "Break check-in reminders" },
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Break check-in reminders",
-                    modifier = Modifier.weight(1f).clearAndSetSemantics { },
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Switch(
-                    checked = reminders,
-                    onCheckedChange = null,
-                    modifier = Modifier.clearAndSetSemantics { }
-                )
+        Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).toggleable(value = reminders, role = Role.Switch,
+            onValueChange = { reminders = it; saved = false }).semantics { contentDescription = "Break check-in reminders" },
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text("Break check-in reminders", Modifier.weight(1f).clearAndSetSemantics { })
+            Switch(reminders, null, Modifier.clearAndSetSemantics { })
+        }
+        if (reminders && !notificationAllowed) {
+            Text("Notifications are off. Your plan and check-in remain available inside the app.", color = Attention)
+            SecondaryButton("Allow notifications") {
+                if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(context,
+                    android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    permission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                } else context.startActivity(android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName))
             }
         }
-        PrimaryButton("Save demo preferences") {
-            submitted = true
-            saved = site.isNotBlank()
-            if (saved) focusManager.clearFocus()
+        PrimaryButton("Save preferences", enabled = !model.busy) {
+            val firstSetup = model.needsOnboarding
+            model.savePreferences(site, effort, clothing, reminders) { saved = true; if (firstSetup) onSaved() }
         }
-        if (saved) {
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Outlined.CheckCircle, null, Modifier.size(24.dp), tint = PrimaryAction)
-                Text("Saved on this screen.", style = MaterialTheme.typography.bodyMedium)
-            }
+        if (saved) Text("Preferences saved on this device.", Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        Disclosure("How HeatShield uses context") {
+            Text("Historical environmental readings are replayed every 20 seconds to explore changing conditions. They are not current sensor measurements. Forecasts come from Open-Meteo for the selected site.")
+            Text("Effort, clothing, shift timing and your response affect the explanation. Check-ins are prompts for a work discussion, not medical assessments or permission to resume work.")
+            Text("Reminders are approximate and Android may delay them. Private records and preferences stay in this device's Room database, separately for each account.")
         }
-        SecondaryButton("Leave demo", onClick = onSignOut)
-    }
-}
-
-@Composable
-private fun AuthAlternatives(accountAction: String, onAccountAction: () -> Unit, onExplore: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        SecondaryButton(accountAction, onClick = onAccountAction)
-        SecondaryButton("Explore demo", onClick = onExplore)
+        Disclosure("Worksite catalogue") {
+            Text(model.catalogueMessage)
+            if (model.ownerId != "local") SecondaryButton("Refresh shared sites", onClick = model::loadSites)
+        }
+        SecondaryButton(if (model.ownerId == "local") "Leave device mode" else "Sign out", enabled = !model.busy, onClick = onSignOut)
     }
 }
 
@@ -293,7 +257,7 @@ private fun FieldMessage(message: String, isError: Boolean) {
     )
 }
 
-private fun isDemoEmail(value: String): Boolean {
+private fun isValidEmail(value: String): Boolean {
     val trimmed = value.trim()
     val at = trimmed.indexOf('@')
     return at > 0 && at < trimmed.lastIndex && trimmed.substring(at + 1).contains('.') && !trimmed.contains(' ')

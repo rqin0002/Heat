@@ -1,50 +1,68 @@
-# HeatShield | FIT5046 A2
+# HeatShield | FIT5046 A4
 
-Jetpack Compose skeleton prototype. Open this **HeatShield** directory in Android Studio and run the **app** configuration on an emulator. Begin at Login and select **Explore demo**.
+Native Kotlin / Jetpack Compose app for outdoor work planning, recorded work and break responses.
+Open this directory in Android Studio and run the `app` configuration. Android SDK 36.1, minimum API 26, target API 36. Gradle 9.6.0, AGP 9.4.1 and Kotlin 2.3.21 are pinned in the existing build files. The local build uses Android Studio's bundled JBR 25 with Java source/target 17.
 
-## Build
+## Run
 
-Android Studio 2026.1.4, AGP 9.4.0, Gradle 9.6.0, Kotlin/Compose compiler 2.3.21, Compose BOM 2025.10.01 and Navigation Compose 2.9.5.
+Log in with a configured Firebase account, or choose **Continue on this device**. Device mode stores independent local records; it does not simulate cloud authentication. First entry opens work preferences. Create today's work record to record a pause response or measure an actual break. The timer survives process recreation on the same boot and discards unrecoverable timing after reboot. Whole elapsed minutes are added only when finishing the timer.
 
-Install SDK platform **Android 36.1** and build tools **36.0.0** if missing.
-Minimum device API 26, target API 36.
-The verified build uses Android Studio's bundled JBR 25.0.3, with Java source/target compatibility set to 17.
-Wrapper scripts and JAR are included. First Gradle sync downloads dependencies from official repositories.
-Android Studio creates your machine's `local.properties`; the submission ZIP excludes the author's local file.
+Plan an upcoming date and compare work windows. A complete two-hour window requires all three hourly boundary/intermediate values for the selected site, and a forecast fetched less than 60 minutes ago. Windows must fit after the shift start and finish by 15:00. Past, stale, missing or mismatched forecasts cannot be saved. The relative comparison is an application policy, not a medically validated exposure limit.
 
-To retain the twenty evidence screenshots, build and install both APKs, run the instrumentation directly, and pull the app's external-files directory before uninstalling. The recorded Gradle connected-test run passed, but its UTP cleanup uninstalled the app and removed that directory. With an emulator running, execute the following in PowerShell from this project directory. Replace `emulator-5554` with the serial shown by `adb devices` if necessary.
+## Source structure
+
+- `MainActivity.kt` starts the app.
+- `ui/` retains the existing screens, navigation, theme and shared controls. `HeatShieldViewModel.kt` coordinates user actions and lifecycle state.
+- `data/` contains the Room models/DAO, sensor CSV loader, weather, authentication and shared-site repositories.
+- `domain/ContextEngine.kt` contains the deterministic context rules and forecast comparison.
+- `background/` contains the periodic forecast worker and version-checked reminder receiver.
+- `assets/microclimate_replay.csv` is the original observed environmental dataset. No example work records are automatically inserted.
+- `app/src/test/` contains JVM tests for decision rules, weather/replay data validation and reminder eligibility. These run on the computer without an Android device.
+- `app/src/androidTest/` contains Compose interactions, the real app lifecycle, Room persistence and local Firebase integration tests. These require an Android device or emulator.
+- `app/src/debug/` contains only the manifest and network configuration for local Firebase emulator HTTP access. This is a debug build overlay, not a third test suite. The exception is absent from release builds. Both test directories use Gradle's standard locations; test classes are not packaged in the app.
+
+The root `build.gradle.kts` declares build plugin versions. `app/build.gradle.kts` configures the app's Android SDK, package, libraries and source locations. Both are intentional. `settings.gradle.kts` connects the `app` module and repositories. The `gradle/` directory and `gradlew` scripts are the shared build wrapper; `.gradle/`, `.kotlin/`, `.idea/` and `build/` are local cache, IDE or generated directories excluded from Git.
+
+Private records, plans and preferences are stored in Room and scoped by account ID. Device-mode records stay separate from cloud accounts. Signing out cancels that account's alarms; no private records are uploaded. Firestore holds only the shared, non-sensitive worksite catalogue. A valid downloaded catalogue is cached in Room for offline use.
+
+## Firebase
+
+The Android application ID is `au.edu.monash.heatshield`. Place this app's downloaded `google-services.json` in `app/`; it is excluded from Git. Builds without that file support device mode and clearly disable cloud account requests. Each teammate must obtain the matching configuration before using cloud accounts.
+
+For the registered project, enable **Authentication → Email/Password**. The source `firestore.rules` allows authenticated reads of `worksites` only; all mobile-client writes and other paths are denied. Deploying these rules and adding catalogue documents are separate cloud operations. A valid document uses its stable worksite ID as the document ID and the fields `name` (string), `latitude` and `longitude` (numbers). Names and IDs must remain stable once records refer to them. Bundled site IDs are `birrarung-marr`, `carlton-gardens`, and `royal-park`; their coordinates are defined in `data/Models.kt`.
 
 ```powershell
-.\gradlew.bat assembleDebug assembleDebugAndroidTest
-$heatShieldAdb = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
-& $heatShieldAdb devices
-& $heatShieldAdb -s emulator-5554 install -r '.\app\build\outputs\apk\debug\app-debug.apk'
-& $heatShieldAdb -s emulator-5554 install -r '.\app\build\outputs\apk\androidTest\debug\app-debug-androidTest.apk'
-& $heatShieldAdb -s emulator-5554 shell am force-stop au.edu.monash.heatshield
-& $heatShieldAdb -s emulator-5554 shell am instrument -w -r -e class heatshield.PrototypeJourneyTest au.edu.monash.heatshield.test/androidx.test.runner.AndroidJUnitRunner
-& $heatShieldAdb -s emulator-5554 pull /sdcard/Android/data/au.edu.monash.heatshield/files/screenshots .\captured-screenshots
+firebase deploy --only firestore:rules --project fit5046-52a4a
 ```
 
-## Scope and data
+Only run the deployment command when ready to update that project's rules. Adding the configuration file alone does not enable a provider or deploy rules.
 
-Implemented: eleven Compose destinations, four-tab bottom navigation, real Material3 controls, password feedback, temporary record CRUD, combined search filters, chart aggregation and context-response preview.
+## Verification
 
-Room, Retrofit, Firebase, sensor streaming and notifications are **proposed A4 integrations**, not implemented here. No INTERNET or notification permission is requested. The real public CSV is staged for A4. It is not the source of the authored UI fixtures. The interface depicts a fictional January12 shift; the sensor file records January7–9. The September forecast snapshot is a separate API availability probe.
+```powershell
+.\gradlew.bat :app:testDebugUnitTest
+# With an Android device/emulator connected:
+.\gradlew.bat :app:connectedDebugAndroidTest
+```
 
-Demo records last for the process and survive activity recreation through a ViewModel. Records and Trends use the same state. The work-window fixture is limited to January12; other dates/time combinations show a no-comparison state. A break response updates the active demonstration record without inventing elapsed minutes. Profile controls illustrate future preferences.
+Tests are grouped by the behavior and environment they protect:
 
-Source files are under `app/src/main/java/heatshield/`, with Kotlin packages `heatshield` and `heatshield.ui`. The Gradle namespace is `heatshield`; the installation ID remains `au.edu.monash.heatshield` so this build updates the existing app. The launcher class is `heatshield.MainActivity`.
+| Class | Location | Coverage |
+| --- | --- | --- |
+| `DecisionRulesTest` | `test` | Context thresholds, replay freshness/provenance, forecast joining/ranking and reminder ownership/timing |
+| `UserInteractionTest` | `androidTest` | Authentication forms and busy states, planning, record editing/deletion, search and trends |
+| `AppJourneyTest` | `androidTest` | Real Activity/ViewModel/Room flow, measured break restoration, duplicate completion and local sign-out/re-entry |
+| `PersistenceTest` | `androidTest` | Account isolation, rejected mutations, database reopening and site/cache persistence |
+| `FirebaseIntegrationTest` | `androidTest` | Local account lifecycle and authenticated read-only Firestore rules |
 
-`MainActivity.kt` launches Compose. `ui/HeatShieldApp.kt` owns navigation and fixture state. `Theme.kt` and `Components.kt` define the visual system. `AuthScreens.kt`, `ShiftScreens.kt` and `RecordsScreens.kt` implement the flows. `assets/` holds the future sensor input and attribution. `androidTest/` holds the interaction walkthrough.
+For a selected device test class, assemble/install both debug APKs and use `adb shell am instrument -w -r -e class heatshield.<ClassName> au.edu.monash.heatshield.test/androidx.test.runner.AndroidJUnitRunner`. These tests do not capture screenshots. Room tests use disposable databases; the app journey restores the existing local profile after execution.
 
-## Attribution
+Firebase tests use a separate named app and the **demo-heatshield** local project. They cannot fall back to the production project. Start local services with `firebase emulators:start --only auth,firestore --project demo-heatshield`, then run `heatshield.FirebaseIntegrationTest` with the additional instrumentation argument `-e firebaseEmulators true`, or run Gradle with `-Pandroid.testInstrumentationRunnerArguments.firebaseEmulators=true`. Without that argument only the Firebase cases are skipped. Each case creates and cleans up its own local accounts and catalogue fixtures, including after an assertion failure; no manual seeding is needed. Fixture administration is fixed to the local Firestore emulator, while permission assertions use the normal authenticated/unauthenticated client SDK. Debug network configuration allows local-emulator HTTP only; release cleartext remains disabled. Tests never create real accounts or send reset emails.
 
-Environmental sensor data: City of Melbourne, *Microclimate sensors data*
+## Data and scheduling
 
-[Dataset](https://data.melbourne.vic.gov.au/explore/dataset/microclimate-sensors-data/information/)
+The historical [City of Melbourne microclimate sensor dataset](https://data.melbourne.vic.gov.au/explore/dataset/microclimate-sensors-data/information/) is used under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The packaged 288 observed temperature/humidity pairs cover 7–9 January 2026 at Birrarung Marr. Playback emits a row every 20 seconds while the app is visible; observation and emission timestamps are distinct. Playback can be paused, stepped or restarted at shift time. Samples not emitted within 40 seconds cannot drive a new context decision; an unresolved recorded response remains open.
 
-[Licence](https://creativecommons.org/licenses/by/4.0/)
+Live planning forecasts use [Open-Meteo weather](https://open-meteo.com/en/docs) and [air-quality UV](https://open-meteo.com/en/docs/air-quality-api), joined by timestamp in Australia/Melbourne time. Failed requests preserve the previous successful payload and timestamp, with a visible failure message.
 
-Launcher artwork: the group-supplied PNG, preserved as `res/drawable-nodpi/heatshield_logo.png` and referenced by `heatshield_icon.xml`. In-app control icons: Android Material Icons via AndroidX (Apache2.0). Fonts: Android system sans-serif. Charts and layouts are original Compose code. All report screens are captured from the running emulator.
-
-The supplied FIT5046 weekly teaching materials were reviewed for alignment after the prototype was authored. The app aligns with the taught Compose layouts, observable state, lists, dropdowns, date pickers, shared ViewModel and navigation patterns. The proposed A4 Room layers align with the Week 7 architecture. These are reference alignments, not claims that teaching code or assets were copied into the project.
+WorkManager schedules one network-constrained 30-minute periodic refresh. Android can defer it. AlarmManager schedules one inexact reminder for the saved window per active account. Plan changes, cancellation, opt-out and sign-out cancel or replace it. Delivery rechecks the owner, stored preference, revision and due time. Notifications require system permission; the app remains usable without it. Force-stop, reboot and OS scheduling restrictions can prevent delivery; reopening restores eligible future plans. This app does not measure body temperature or certify recovery.
