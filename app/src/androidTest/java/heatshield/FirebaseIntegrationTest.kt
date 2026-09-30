@@ -60,11 +60,12 @@ class FirebaseIntegrationTest {
             .build()
         app = FirebaseApp.initializeApp(context, options, "heatshield-emulator-${UUID.randomUUID()}")
         assertEquals("demo-heatshield", app.options.projectId)
-        auth = FirebaseAuth.getInstance(app).also { it.useEmulator("10.0.2.2", 9099) }
+        // Non-default ports (firebase.json) so HeatShield's emulators never collide with another project's on 9099/8080.
+        auth = FirebaseAuth.getInstance(app).also { it.useEmulator("10.0.2.2", 9199) }
         firestore = FirebaseFirestore.getInstance(app).also {
             it.firestoreSettings = FirebaseFirestoreSettings.Builder()
                 .setLocalCacheSettings(MemoryCacheSettings.newBuilder().build()).build()
-            it.useEmulator("10.0.2.2", 8080)
+            it.useEmulator("10.0.2.2", 8180)
         }
     }
 
@@ -169,7 +170,7 @@ class FirebaseIntegrationTest {
 
     /** Admin fixture calls are fixed to the local demo emulator; client assertions use the SDK. */
     private fun emulatorFixtureRequest(method: String) {
-        val base = "http://10.0.2.2:8080/v1/projects/demo-heatshield/databases/(default)/documents/worksites"
+        val base = "http://10.0.2.2:8180/v1/projects/demo-heatshield/databases/(default)/documents/worksites"
         val suffix = if (method == "POST") "?documentId=$siteId" else "/$siteId"
         val connection = URL(base + suffix).openConnection() as HttpURLConnection
         try {
