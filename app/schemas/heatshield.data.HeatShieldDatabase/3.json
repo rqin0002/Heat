@@ -1,0 +1,598 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "c484718e66bdd4f35af7bcc3f28fa100",
+    "entities": [
+      {
+        "tableName": "work_sessions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `ownerId` TEXT NOT NULL, `title` TEXT NOT NULL, `site` TEXT NOT NULL, `date` TEXT NOT NULL, `outdoorMinutes` INTEGER NOT NULL, `breakMinutes` INTEGER NOT NULL, `status` TEXT NOT NULL, `checkInNote` TEXT, `startedAt` INTEGER, `endedAt` INTEGER, `plannedEndAt` INTEGER, `source` TEXT NOT NULL DEFAULT 'manual', `heavyWork` INTEGER NOT NULL DEFAULT 0, `heavyClothing` INTEGER NOT NULL DEFAULT 0, `peakHeat` REAL, `peakLevel` TEXT, `normalMinutes` INTEGER NOT NULL DEFAULT 0, `warmMinutes` INTEGER NOT NULL DEFAULT 0, `hotMinutes` INTEGER NOT NULL DEFAULT 0, `veryHotMinutes` INTEGER NOT NULL DEFAULT 0, `extremeMinutes` INTEGER NOT NULL DEFAULT 0, `longestStretchMinutes` INTEGER NOT NULL DEFAULT 0, `autoEnded` INTEGER NOT NULL DEFAULT 0, `startedElapsed` INTEGER, `bootCount` INTEGER, `note` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ownerId",
+            "columnName": "ownerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "site",
+            "columnName": "site",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "outdoorMinutes",
+            "columnName": "outdoorMinutes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "breakMinutes",
+            "columnName": "breakMinutes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "checkInNote",
+            "columnName": "checkInNote",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "endedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "plannedEndAt",
+            "columnName": "plannedEndAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'manual'"
+          },
+          {
+            "fieldPath": "heavyWork",
+            "columnName": "heavyWork",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "heavyClothing",
+            "columnName": "heavyClothing",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "peakHeat",
+            "columnName": "peakHeat",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "peakLevel",
+            "columnName": "peakLevel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "normalMinutes",
+            "columnName": "normalMinutes",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "warmMinutes",
+            "columnName": "warmMinutes",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "hotMinutes",
+            "columnName": "hotMinutes",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "veryHotMinutes",
+            "columnName": "veryHotMinutes",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "extremeMinutes",
+            "columnName": "extremeMinutes",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "longestStretchMinutes",
+            "columnName": "longestStretchMinutes",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "autoEnded",
+            "columnName": "autoEnded",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "startedElapsed",
+            "columnName": "startedElapsed",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "bootCount",
+            "columnName": "bootCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_work_sessions_ownerId",
+            "unique": false,
+            "columnNames": [
+              "ownerId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_work_sessions_ownerId` ON `${TABLE_NAME}` (`ownerId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "user_preferences",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ownerId` TEXT NOT NULL, `site` TEXT NOT NULL, `effort` TEXT NOT NULL, `clothing` TEXT NOT NULL, `reminders` INTEGER NOT NULL, `task` TEXT NOT NULL DEFAULT 'Digging & planting', `shiftStartMinute` INTEGER NOT NULL DEFAULT 420, `shiftEndMinute` INTEGER NOT NULL DEFAULT 900, `hotDayTrigger` REAL NOT NULL DEFAULT 35.0, `acclimatisingUntil` INTEGER, `setupDone` INTEGER NOT NULL DEFAULT 0, `smokoMinute` INTEGER NOT NULL DEFAULT 570, `lunchMinute` INTEGER NOT NULL DEFAULT 720, `breakRule` TEXT NOT NULL DEFAULT 'heatshield', PRIMARY KEY(`ownerId`))",
+        "fields": [
+          {
+            "fieldPath": "ownerId",
+            "columnName": "ownerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "site",
+            "columnName": "site",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "effort",
+            "columnName": "effort",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clothing",
+            "columnName": "clothing",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reminders",
+            "columnName": "reminders",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "task",
+            "columnName": "task",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'Digging & planting'"
+          },
+          {
+            "fieldPath": "shiftStartMinute",
+            "columnName": "shiftStartMinute",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "420"
+          },
+          {
+            "fieldPath": "shiftEndMinute",
+            "columnName": "shiftEndMinute",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "900"
+          },
+          {
+            "fieldPath": "hotDayTrigger",
+            "columnName": "hotDayTrigger",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "35.0"
+          },
+          {
+            "fieldPath": "acclimatisingUntil",
+            "columnName": "acclimatisingUntil",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "setupDone",
+            "columnName": "setupDone",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "smokoMinute",
+            "columnName": "smokoMinute",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "570"
+          },
+          {
+            "fieldPath": "lunchMinute",
+            "columnName": "lunchMinute",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "720"
+          },
+          {
+            "fieldPath": "breakRule",
+            "columnName": "breakRule",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'heatshield'"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ownerId"
+          ]
+        }
+      },
+      {
+        "tableName": "shift_plans",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ownerId` TEXT NOT NULL, `work` TEXT NOT NULL, `effort` TEXT NOT NULL, `clothing` TEXT NOT NULL, `dayMillis` INTEGER NOT NULL, `startHour` INTEGER NOT NULL, `startMinute` INTEGER NOT NULL, `site` TEXT NOT NULL, `window` TEXT NOT NULL, `reminderAt` INTEGER, `revision` INTEGER NOT NULL, `endMinute` INTEGER NOT NULL DEFAULT 900, PRIMARY KEY(`ownerId`))",
+        "fields": [
+          {
+            "fieldPath": "ownerId",
+            "columnName": "ownerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "work",
+            "columnName": "work",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "effort",
+            "columnName": "effort",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clothing",
+            "columnName": "clothing",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dayMillis",
+            "columnName": "dayMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startHour",
+            "columnName": "startHour",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startMinute",
+            "columnName": "startMinute",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "site",
+            "columnName": "site",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "window",
+            "columnName": "window",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reminderAt",
+            "columnName": "reminderAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endMinute",
+            "columnName": "endMinute",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "900"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ownerId"
+          ]
+        }
+      },
+      {
+        "tableName": "forecast_cache",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`site` TEXT NOT NULL, `fetchedAt` INTEGER NOT NULL, `hoursJson` TEXT NOT NULL, `lastAttempt` INTEGER NOT NULL, `outcome` TEXT NOT NULL, `error` TEXT, `daysJson` TEXT NOT NULL DEFAULT '[]', `refreshedBy` TEXT NOT NULL DEFAULT 'app', PRIMARY KEY(`site`))",
+        "fields": [
+          {
+            "fieldPath": "site",
+            "columnName": "site",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fetchedAt",
+            "columnName": "fetchedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hoursJson",
+            "columnName": "hoursJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastAttempt",
+            "columnName": "lastAttempt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "outcome",
+            "columnName": "outcome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "error",
+            "columnName": "error",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "daysJson",
+            "columnName": "daysJson",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'[]'"
+          },
+          {
+            "fieldPath": "refreshedBy",
+            "columnName": "refreshedBy",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'app'"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "site"
+          ]
+        }
+      },
+      {
+        "tableName": "work_sites",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_work_sites_name",
+            "unique": true,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_work_sites_name` ON `${TABLE_NAME}` (`name`)"
+          }
+        ]
+      },
+      {
+        "tableName": "shift_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `shiftId` INTEGER NOT NULL, `type` TEXT NOT NULL, `startedAt` INTEGER NOT NULL, `endedAt` INTEGER, `startedElapsed` INTEGER NOT NULL, `bootCount` INTEGER NOT NULL, `reason` TEXT, `skipped` INTEGER NOT NULL DEFAULT 0, `level` TEXT, `heatC` REAL, `dueAt` INTEGER, FOREIGN KEY(`shiftId`) REFERENCES `work_sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shiftId",
+            "columnName": "shiftId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "endedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "startedElapsed",
+            "columnName": "startedElapsed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bootCount",
+            "columnName": "bootCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "reason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "skipped",
+            "columnName": "skipped",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "level",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "heatC",
+            "columnName": "heatC",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "dueAt",
+            "columnName": "dueAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_shift_events_shiftId",
+            "unique": false,
+            "columnNames": [
+              "shiftId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_shift_events_shiftId` ON `${TABLE_NAME}` (`shiftId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "work_sessions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "shiftId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c484718e66bdd4f35af7bcc3f28fa100')"
+    ]
+  }
+}
