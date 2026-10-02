@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Account validation and service failures. -->
+    <string name="auth_password_missing">Enter a password.</string>
+    <string name="auth_password_length">Use a password with at least 12 characters.</string>
+    <string name="auth_sign_in_missing_account">Sign-in did not return an account. Please try again.</string>
+    <string name="auth_sign_up_missing_account">Account creation did not return an account. Please try again.</string>
+    <string name="auth_invalid_email">Enter a valid email address.</string>
+    <string name="auth_network_failed">Cannot reach the account service. Check your connection and try again.</string>
+    <string name="auth_too_many_attempts">Too many attempts. Wait a while before trying again.</string>
+    <string name="auth_weak_password">Choose a stronger password with at least 12 characters.</string>
+    <string name="auth_email_in_use">This email cannot be registered. Try signing in or resetting the password.</string>
+    <string name="auth_user_disabled">This account can\'t be used. Create a new one, or keep using HeatShield without one.</string>
+    <string name="auth_details_failed">The account request failed. Check your details and try again.</string>
+    <string name="auth_request_failed">The account request failed. Please try again.</string>
+
+    <!-- Forecast errors shown by Today and Plan, decoded from stable stored failure kinds. -->
+    <string name="forecast_service_failed">The forecast service didn\'t answer. Retry in a few minutes.</string>
+    <string name="forecast_connection_failed">Forecast could not be reached. Check your connection and retry.</string>
+    <string name="forecast_incomplete_failed">The forecast came back incomplete. Retry.</string>
+    <string name="forecast_saved_unreadable">The saved forecast couldn\'t be read. Retry.</string>
+</resources>
