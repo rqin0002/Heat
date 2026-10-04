@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon layer: the shield with the four bars cut out. Only alpha is used; the launcher tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M54,26 L78,34 L78,54 C78,68 67,78 54,84 C41,78 30,68 30,54 L30,34 Z M37.5,62 L43.5,62 L43.5,70 L37.5,70 Z M46.5,57 L52.5,57 L52.5,70 L46.5,70 Z M55.5,52 L61.5,52 L61.5,70 L55.5,70 Z M64.5,47 L70.5,47 L70.5,70 L64.5,70 Z" />
+</vector>

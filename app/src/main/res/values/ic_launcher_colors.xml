@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The adaptive icon background and the in-app mark: the former Canopy teal. The palette spec makes moving it to
+         the Action blue optional and leaves it out of the palette change. -->
+    <color name="ic_launcher_background">#0E5A55</color>
+</resources>

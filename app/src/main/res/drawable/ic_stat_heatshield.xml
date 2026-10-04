@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon: four rising bars, white on transparent. The system tints it; colour comes from Notification.setColor. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M3,16 L6.5,16 L6.5,21 L3,21 Z M8,12 L11.5,12 L11.5,21 L8,21 Z M13,8 L16.5,8 L16.5,21 L13,21 Z M18,4 L21.5,4 L21.5,21 L18,21 Z" />
+</vector>
