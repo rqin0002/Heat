@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Heat and UV words shared by screens, spoken descriptions and notifications. -->
+    <string name="heat_level_normal">Normal</string>
+    <string name="heat_level_warm">Warm</string>
+    <string name="heat_level_hot">Hot</string>
+    <string name="heat_level_very_hot">Very hot</string>
+    <string name="heat_level_extreme">Extreme</string>
+    <string name="uv_category_low">Low</string>
+    <string name="uv_category_moderate">Moderate</string>
+    <string name="uv_category_high">High</string>
+    <string name="uv_category_very_high">Very high</string>
+    <string name="uv_category_extreme">Extreme</string>
+
+    <!-- Source chips beside heat advice. -->
+    <string name="source_bom">BOM</string>
+    <string name="source_worksafe_vic">WorkSafe Vic</string>
+    <string name="source_safe_work_australia">Safe Work Australia</string>
+    <string name="source_workplace_rule">Workplace rule example</string>
+    <string name="source_union">Union starting point (VTHC)</string>
+    <string name="source_heatshield_rule">HeatShield rule</string>
+    <string name="source_your_setting">Your setting</string>
+
+    <!-- Job display names; changing these never changes the saved job keys. -->
+    <string name="work_task_push_mowing">Push mowing</string>
+    <string name="work_task_ride_on_mowing">Ride-on mowing</string>
+    <string name="work_task_digging_planting">Digging &amp; planting</string>
+    <string name="work_task_pruning_hedging">Pruning &amp; hedging</string>
+    <string name="work_task_weeding_mulching">Weeding &amp; mulching</string>
+    <string name="work_task_irrigation_checks">Irrigation &amp; checks</string>
+    <string name="work_task_litter_paths">Litter &amp; paths</string>
+    <string name="work_task_legacy_planting">Planting beds</string>
+    <string name="work_task_legacy_mowing">Mowing</string>
+    <string name="work_task_legacy_pruning">Pruning</string>
+
+    <!-- Work-window comparison: maximum whole °C, whole humidity percent and UV category. -->
+    <string name="work_window_summary">Up to %1$d° · %2$d%% humidity · UV %3$s</string>
+</resources>
