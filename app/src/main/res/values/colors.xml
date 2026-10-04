@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Window colours shown before Compose draws; they match LIGHT_PAPER and LIGHT_ACTION in ui/Palette.kt
+         (PaletteResourcesTest pins them). -->
+    <color name="paper_window">#F5F5F7</color>
+    <color name="action_window">#0066CC</color>
+    <!-- The first-aid launcher shortcut's red: LIGHT_EMERGENCY in ui/Palette.kt, in both themes, since the launcher
+         draws it on its own background. -->
+    <color name="first_aid_shortcut">#A12626</color>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark window colours; they match DARK_PAPER and DARK_ACTION in ui/Palette.kt (PaletteResourcesTest pins them). -->
+    <color name="paper_window">#121214</color>
+    <color name="action_window">#7CB8FF</color>
+</resources>

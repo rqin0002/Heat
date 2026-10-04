@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spoken for the source chip beside a number. %1$s is a source label, e.g. "BOM". -->
+    <string name="source_chip_description">Source: %1$s</string>
+    <!-- Disclosure (Components.kt), e.g. "Why this suggestion?": the spoken state, and the action TalkBack offers. -->
+    <string name="disclosure_expanded">Expanded</string>
+    <string name="disclosure_collapsed">Collapsed</string>
+    <string name="disclosure_show">Show details</string>
+    <string name="disclosure_hide">Hide details</string>
+</resources>
