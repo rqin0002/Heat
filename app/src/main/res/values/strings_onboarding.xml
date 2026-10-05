@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Welcome -->
+    <string name="welcome_title">HeatShield</string>
+    <string name="welcome_line">Know your park\'s heat before you clock on, and get a nudge when a break is due.</string>
+    <string name="welcome_supporting">See it hour by hour, with the best time for heavy jobs.</string>
+    <string name="welcome_small_print">No account needed. Your shifts stay on this phone.</string>
+    <string name="welcome_get_started">Get started</string>
+    <string name="welcome_sign_in">Sign in</string>
+    <string name="welcome_create_account">Create account</string>
+
+    <!-- Quick setup (fields are shared with Profile). These are pre-filled pickers that cannot be empty,
+         so they carry no asterisk: an asterisk marks only a field the user must type in. -->
+    <string name="setup_title">Your usual day</string>
+    <string name="setup_intro">Where you work, your usual hours and your usual job. Change them any time in Profile.</string>
+    <!-- Only for an owner upgraded from the previous version (SetupScreen's upgrading); a new owner never sees it. -->
+    <string name="setup_confirm_conditions">HeatShield kept your settings from the last version. Check your usual work: the suggested job matches the effort you chose before. Your log stays on this phone.</string>
+    <string name="setup_group_where">Where</string>
+    <string name="setup_group_hours">Hours</string>
+    <string name="setup_group_work">Work</string>
+    <string name="setup_field_park">Park</string>
+    <string name="setup_park_note">All three parks share one inner-Melbourne forecast.</string>
+    <string name="setup_field_start">Start</string>
+    <string name="setup_field_finish">Finish</string>
+    <string name="setup_dialog_start">Usual start</string>
+    <string name="setup_dialog_finish">Usual finish</string>
+    <string name="setup_set_time">Set time</string>
+    <string name="setup_cancel">Cancel</string>
+    <string name="setup_hours_error">Finish must be at least an hour after start</string>
+    <string name="setup_field_work">Usual work</string>
+    <string name="setup_work_option">%1$s · %2$s</string>
+    <string name="setup_effort_light">light work</string>
+    <string name="setup_effort_moderate">moderate work</string>
+    <string name="setup_effort_heavy">heavy work</string>
+    <string name="setup_acclimatising">New to outdoor work, or back from leave this week</string>
+    <!-- Exclusive end (spec §5.5): switched on today, it counts today and the next six days, so "for the next 7 days". -->
+    <plurals name="setup_acclimatising_supporting">
+        <item quantity="one">For the next %d day, warm and hotter days count one level higher for you.</item>
+        <item quantity="other">For the next %d days, warm and hotter days count one level higher for you.</item>
+    </plurals>
+    <string name="setup_done">Show today\'s heat</string>
+    <string name="setup_choose_work">Choose your usual work.</string>
+    <!-- An unknown park reuses Task 8's notice_unknown_park (strings_today.xml): one name per message. -->
+
+    <!-- Profile -->
+    <string name="profile_group_work">Your work</string>
+    <string name="profile_heavy_clothing">Heavy protective clothing</string>
+    <string name="profile_heavy_clothing_supporting">Counts one level higher on warm and hotter days.</string>
+    <string name="profile_acclimatising">New to outdoor work, or back from leave</string>
+    <!-- %1$s is the last day that counts (the day before the stored exclusive end), e.g. "Thu 8 Oct". -->
+    <string name="profile_acclimatising_until">One level higher on warm and hotter days, until the end of %1$s.</string>
+    <string name="profile_group_rule">Hot-day rule</string>
+    <!-- Spec §5.7: an example threshold from workplace rules, for the crew to confirm, not a local norm. %1$s is "35°". -->
+    <string name="profile_rule_default">%1$s · example threshold, confirm with your team leader</string>
+    <string name="profile_rule_custom">Custom</string>
+    <string name="profile_rule_custom_label">Your crew\'s rule, °C*</string>
+    <string name="profile_rule_required_legend">* required</string>
+    <!-- Crew rules are whole degrees (HeatRules.isValidTrigger), compared with whole air degrees. -->
+    <string name="profile_rule_custom_error">Enter a whole number from 25 to 50</string>
+    <string name="profile_rule_helper">Air temperature in the shade. Ask your team leader which number your crew uses.</string>
+    <string name="profile_rule_examples">The AWU construction clause stops work at 35°. Glen Eira Policy 4.23 acts when it\'s over 35° for more than an hour. Both go by BOM readings.</string>
+    <string name="profile_group_alerts">Alerts</string>
+    <string name="profile_preview_title">Preview a hot day</string>
+    <!-- No temperature here: the row names the day, and Preview shows its numbers with their source. -->
+    <string name="profile_preview_supporting">A real hot day from January, recorded by a City of Melbourne sensor.</string>
+    <string name="profile_group_account">Account</string>
+    <string name="profile_account_local">On this phone only</string>
+    <string name="profile_account_local_supporting">Your log is saved on this phone. Signing in opens a separate log for that account; this one stays here and returns when you sign out and choose Get started.</string>
+    <string name="profile_account_signed_in">Signed in</string>
+    <string name="profile_refresh_parks">Refresh park list</string>
+    <string name="profile_sign_in">Sign in</string>
+    <string name="profile_create_account">Create account</string>
+    <string name="profile_sign_out">Sign out</string>
+    <string name="profile_group_about">About &amp; sources</string>
+    <string name="profile_about_limits">HeatShield uses forecasts, not measurements at your site. There\'s no legal stop-work temperature in Victoria, but your employer must still control heat risks. Your crew\'s rule and your team leader\'s directions come before HeatShield\'s levels, and anyone with signs of heat illness stops work whatever the temperature. HeatShield doesn\'t diagnose heat illness.</string>
+    <string name="profile_about_sources">Sources</string>
+    <string name="profile_about_data">Forecasts: Open-Meteo, CC BY 4.0. Preview sensor day: City of Melbourne microclimate sensors, CC BY 4.0.</string>
+    <string name="profile_about_fonts">Fonts: Atkinson Hyperlegible Next and Mono, SIL Open Font License 1.1.</string>
+
+    <!-- Messages and sign-in -->
+    <string name="app_message_dismiss">Dismiss</string>
+    <!-- The one failed-save message. Task 13 points the ownedAction fallback at it too. -->
+    <string name="notice_save_failed">Couldn\'t save. Try again.</string>
+    <!-- The one unavailable-accounts message, shared by Login, Profile and Create account. -->
+    <string name="auth_unavailable">Accounts aren\'t set up in this version of HeatShield. You can use it without one.</string>
+</resources>
