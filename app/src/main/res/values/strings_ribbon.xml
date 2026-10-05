@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Heat ribbon: spoken per-hour summaries and the large-font hour list. -->
+<resources>
+    <string name="ribbon_hour">%1$s to %2$s, %3$s, %4$s</string>
+    <string name="ribbon_hour_over_rule">%1$s to %2$s, %3$s, %4$s, over your %5$d degree rule</string>
+    <!-- A shift hour the forecast does not cover: the cell is drawn empty, never guessed. -->
+    <string name="ribbon_hour_missing">%1$s to %2$s, No forecast</string>
+    <plurals name="ribbon_degrees">
+        <item quantity="one">%d degree</item>
+        <item quantity="other">%d degrees</item>
+    </plurals>
+    <string name="ribbon_now">Now</string>
+    <string name="ribbon_over_rule">Over your %1$s rule</string>
+    <string name="ribbon_no_forecast">No forecast</string>
+    <!-- A break on the shift, listed under its hour at large font: %1$s start, %2$s end (or now, for a running break) -->
+    <string name="ribbon_break">Break %1$s – %2$s</string>
+</resources>

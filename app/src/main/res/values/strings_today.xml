@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Today, the Why sheet, the next step and the break suggestion (M1 Task 8). -->
+<resources>
+    <!-- Hero -->
+    <string name="today_eyebrow">%1$s · %2$s</string>
+    <string name="today_change_park">Change park</string>
+    <string name="today_level_qualifier">for you</string>
+    <string name="today_numeral_feels">feels like in shade · air %1$s</string>
+    <string name="today_numeral_air">air in shade</string>
+    <string name="today_caption_peak_now">Shift peak %1$s · now %2$s</string>
+    <string name="today_caption_peak">Shift peak %1$s</string>
+    <!-- Part of the shift has no forecast (coverage incomplete): the peak is only the highest hour the forecast has. -->
+    <string name="today_caption_partial_now">Peak in available forecast · %1$s · now %2$s</string>
+    <string name="today_caption_partial">Peak in available forecast · %1$s</string>
+    <string name="today_why_open">Why this?</string>
+    <string name="today_extreme_now">Stop heavy work outdoors. Check your crew\'s hot-day rule.</string>
+    <string name="today_extreme_from">From %1$s: stop heavy work outdoors. Check your crew\'s hot-day rule.</string>
+
+    <!-- Lines. The *_partial lines replace a whole-shift claim when some shift hours have no forecast. -->
+    <plurals name="today_crew_passes">
+        <item quantity="one">Air forecast to reach %1$s from %2$s (%3$d h of your shift)</item>
+        <item quantity="other">Air forecast to reach %1$s from %2$s (%3$d h of your shift)</item>
+    </plurals>
+    <string name="today_crew_under">Air forecast to stay under %1$s during your shift</string>
+    <string name="today_crew_under_partial">Available hours are below %1$s; some shift hours are missing</string>
+    <string name="today_crew_passes_partial">%1$s in available hours; some shift hours are missing</string>
+    <string name="today_heavy_before">Heavy jobs before %1$s</string>
+    <string name="today_heavy_past">Heavy jobs were best before %1$s</string>
+    <string name="today_heavy_from_start">Hot for heavy work, or over your rule, from the start of your shift</string>
+    <string name="today_heavy_none">No heavy-job cut-off today</string>
+    <string name="today_heavy_none_partial">No cut-off found in available hours; some shift hours are missing</string>
+    <string name="today_heavy_found_partial">Heavy-work threshold reached at %1$s in available hours; missing hours may reach it earlier</string>
+    <string name="today_plan_saved">Your work window: %1$s – %2$s</string>
+    <string name="today_uv_window">UV %1$s · sun protection %2$s – %3$s</string>
+    <string name="today_uv_partial">UV %1$s in available hours · some UV hours are missing; use sun protection for outdoor work</string>
+    <string name="today_uv_category">UV %1$s today · outdoor workers need sun protection all year</string>
+    <string name="today_cadence">Suggested at the peak: %1$d min work, %2$d min break in shade</string>
+    <string name="today_cadence_if_working">If work goes ahead: %1$d min work, %2$d min break in shade</string>
+    <!-- At Extreme there is no work/break split: this follows the stop line on Today and on the break check-in. -->
+    <string name="today_cadence_extreme">If your crew keeps working, take breaks in the shade and follow your crew\'s rule.</string>
+    <!-- An answer from the break check-in that is still open (NextStep.OpenAnswer); %1$s is an answerLine. -->
+    <string name="today_next_answer">You said: %1$s</string>
+    <string name="shift_answer_no_shade_line">No shade here. Raise it with your team leader.</string>
+    <!-- %1$s is the snoozed break's due time (ShiftEvaluation.breakDueAgainAt). When a stop comes first, the line is
+         break_check_answer_cant_stop alone: no break time past the stop line. -->
+    <string name="shift_answer_cant_stop_line">Can\'t stop yet. Break due again at %1$s.</string>
+    <!-- The stamp says whose forecast this is and that it is for inner Melbourne, not a reading at the park. -->
+    <string name="today_updated_now">Open-Meteo forecast for inner Melbourne · updated just now</string>
+    <plurals name="today_updated_minutes">
+        <item quantity="one">Open-Meteo forecast for inner Melbourne · updated %d min ago</item>
+        <item quantity="other">Open-Meteo forecast for inner Melbourne · updated %d min ago</item>
+    </plurals>
+    <plurals name="today_updated_hours">
+        <item quantity="one">Open-Meteo forecast for inner Melbourne · updated %d h ago</item>
+        <item quantity="other">Open-Meteo forecast for inner Melbourne · updated %d h ago</item>
+    </plurals>
+    <string name="today_updated_background">%1$s (background)</string>
+    <!-- The debug build's demo fixture (DemoDataReceiver): invented hours, never shown as Open-Meteo's. -->
+    <string name="today_updated_demo">Demo forecast (debug build) · not Open-Meteo</string>
+
+    <!-- Forecast state: how old the forecast is; the card's Retry updates it. From M3, with break-due alerts on, each is
+         followed by today_alerts_paused: alerts and the hot-day nudge pause while the forecast is out of date (spec §5.13). -->
+    <plurals name="today_stale_hours">
+        <item quantity="one">Forecast is %d h old, so today\'s numbers may have changed.</item>
+        <item quantity="other">Forecast is %d h old, so today\'s numbers may have changed.</item>
+    </plurals>
+    <plurals name="today_stale_days">
+        <item quantity="one">Forecast is %d day old, so today\'s numbers may have changed.</item>
+        <item quantity="other">Forecast is %d days old, so today\'s numbers may have changed.</item>
+    </plurals>
+    <string name="today_stale_not_today">This forecast doesn\'t cover today.</string>
+    <string name="today_alerts_paused">Break alerts are paused until it updates.</string>
+    <string name="today_missing">No forecast yet. Connect once to get today\'s heat.</string>
+    <string name="today_loading">Getting today\'s forecast…</string>
+    <string name="today_no_shift_hours">The forecast doesn\'t cover your shift hours today.</string>
+    <string name="today_retry">Retry</string>
+    <string name="today_retrying">Retrying…</string>
+
+    <!-- Next steps -->
+    <string name="today_preview_cool">Normal heat today. Preview a hot day</string>
+    <string name="today_preview_plain">Preview a hot day</string>
+    <string name="today_preview_open">Open the hot-day preview</string>
+    <string name="today_unwell">Someone unwell? Heat first aid</string>
+    <string name="today_plan">Plan work windows</string>
+    <string name="today_plan_clear">Clear saved window</string>
+    <string name="today_plan_cleared">Your saved work window was for %1$s, so it has been cleared.</string>
+
+    <!-- Shared notice, defined only here: selectSite (this task) and Task 10's persistPreferences both read it. -->
+    <string name="notice_unknown_park">Choose a park from the list.</string>
+
+    <!-- Why sheet: a value, the rule behind it, and exactly one source label per row. The level and every action
+         HeatShield composes carry [HeatShield rule]; their text names the numbers they borrow and on what terms (A7). -->
+    <string name="why_title">Why this?</string>
+    <string name="why_more">Other numbers on Today</string>
+    <string name="why_footer">Open-Meteo forecast for inner Melbourne, shared by all three parks. Limits and all sources: Profile › About &amp; sources.</string>
+    <string name="why_level_value">%1$s at a heat number of %2$s</string>
+    <!-- When personal factors raise the level, the hero reads "Hot · for you"; this row starts with the same word.
+         %1$s is the raised level, %2$s the level from the heat number alone, %3$s the heat number, e.g. "31°". -->
+    <string name="why_level_value_bumped">%1$s for you · %2$s at a heat number of %3$s</string>
+    <string name="why_level_rule">Normal under 30°, Warm from 30°, Hot from 32°, Very hot from 35°, Extreme from 38°, judged on the whole number shown, so 31.5 shows as 32° and is Hot. Steps at 30, 32 and 34 borrow VTHC\'s rest table; 35 and 38 borrow workplace rules that use BOM shade air. HeatShield applies them to the heat number, which is never below air, so humid days reach each level sooner.</string>
+    <string name="why_heat_value">Heat number %1$s at %2$s</string>
+    <string name="why_heat_rule">The higher of air temperature and feels like, so HeatShield never shows a heat number below the forecast air temperature. WorkSafe Vic: air temperature alone can\'t tell you the risk; humidity, sun, the work and clothing all count.</string>
+    <string name="why_now_value">Heat number %1$s now (the hour from %2$s)</string>
+    <string name="why_now_rule">This hour\'s forecast, worked out the same way as the shift peak.</string>
+    <string name="why_feels_value">Feels like %1$s in shade · air %2$s at %3$s</string>
+    <string name="why_feels_rule">BOM\'s shade formula, applied to the Open-Meteo forecast\'s air temperature, humidity and wind. In direct sun it can feel up to about 8° hotter.</string>
+    <string name="why_adjust_bumped">Raised to %1$s for you</string>
+    <string name="why_adjust_rule">WorkSafe Vic and Safe Work Australia list hard physical work, heavy protective clothing and not being used to the heat (new, or back after time away) as risk factors. On Warm days and hotter, HeatShield adds one level for each, two at most.</string>
+    <string name="why_extreme_rule">At Extreme, HeatShield says stop heavy work outdoors. Its 38° step borrows workplace rules that read BOM shade air: Banyule tells outdoor staff to stop outdoor work above 38°.</string>
+    <!-- why_crew_rule goes with a preset rule (35° or 38°) and [Workplace rule example]; why_crew_rule_custom with any
+         other number and [Your setting]. -->
+    <string name="why_crew_rule">An example threshold from workplace rules (AWU construction clause 35°, Banyule 38°), read from BOM shade air. Confirm the number with your team leader. HeatShield counts your shift hours where forecast air, in whole degrees, reaches %1$s. Crew rules usually go by a BOM reading on the day, not this forecast.</string>
+    <string name="why_crew_rule_custom">The number you set in Profile. Confirm it with your team leader. HeatShield counts your shift hours where forecast air, in whole degrees, reaches %1$s. Crew rules usually go by a BOM reading on the day, not this forecast.</string>
+    <string name="why_heavy_rule">Safe Work Australia and WorkSafe Vic advise doing physically demanding work in the cooler part of the day; heat stress is still possible early. HeatShield\'s cut-off is the first shift hour that would be Hot for heavy work, or that reaches your rule.</string>
+    <string name="why_uv_rule">Low 0 to 2, Moderate 3 to 5, High 6 to 7, Very high 8 to 10, Extreme 11 and over. Sun protection starts at UV 3. Both are judged on the UV index as the whole number BOM reports, so a clear-sky forecast of 2.5 counts as 3.</string>
+    <string name="why_sun_all_year_value">Outdoor workers need sun protection all year</string>
+    <string name="why_sun_all_year_rule">WorkSafe Vic: outdoor workers should use sun protection all year round to cut cumulative UV, and it is recommended whenever UV is 3 or more. SunSmart says the same for outdoor work.</string>
+    <string name="why_cadence_unavailable">Break suggestions need a current forecast.</string>
+    <string name="why_cadence_none">No break suggestion at Normal heat</string>
+    <string name="why_cadence_rule">No regulator sets a break interval. HeatShield suggests: Warm, 60 min work then 10 min break; Hot, 45 then 15; Very hot, 30 then 15. At Extreme it suggests no work and break split: stop heavy work outdoors, and if your crew keeps working, take breaks in the shade and follow your crew\'s rule.</string>
+    <string name="why_union_rest_value">Union starting point: 15 min rest an hour from 30°, 30 from 32°, 45 from 34°, no work from 36°</string>
+    <string name="why_union_rest_rule">VTHC\'s suggested place to start negotiating rest breaks. Ask your HSR what your crew has agreed.</string>
+    <string name="why_age_rule">Under 1 h old is fresh. Older than 6 h, or not covering today, it\'s marked out of date and break alerts pause until it updates.</string>
+
+    <!-- Break screen. Its first line is the same next step as Today's: an open answer (today_next_answer), the stop
+         line with today_cadence_extreme, the day's rhythm (today_cadence, today_cadence_if_working), or one of these. -->
+    <string name="break_level_missing">No current forecast for your shift. Follow your crew\'s hot-day rule.</string>
+    <string name="break_level_normal">Normal heat today. Take your usual breaks.</string>
+    <string name="break_why_title">Why this suggestion?</string>
+    <string name="break_why_body">It uses today\'s forecast heat for your park and today\'s work: the shift you\'re running, your saved plan, or your usual day. Your crew\'s hot-day rule still applies.</string>
+</resources>
