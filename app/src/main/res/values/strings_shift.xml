@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- M2: the shift clock. Verb first, numbers first, sentence case. Stored values (none/to_raise, tracked/manual/preview,
+     break/smoko/lunch/cant_stop) never appear; these are their words. -->
+<resources>
+    <!-- Today, off shift -->
+    <string name="shift_start">Start shift</string>
+    <string name="shift_starting">Starting…</string>
+    <string name="shift_start_supporting">Counts the time since your last break. Break due shows here from real time and heat.</string>
+
+    <!-- Start shift screen -->
+    <string name="screen_title_start_shift">Start shift</string>
+    <string name="shift_start_intro">Check today\'s details, then start the clock.</string>
+    <string name="shift_start_group_where">Where and what</string>
+    <string name="shift_start_group_when">When</string>
+    <string name="shift_field_work">Today\'s work</string>
+    <string name="shift_heavy_work">Heavy work this shift</string>
+    <string name="shift_heavy_work_supporting">Counts one level higher on warm and hotter days and brings your breaks forward.</string>
+    <!-- Under the union table the rows go by the heat number alone, so heavy work changes the level shown, not the breaks. -->
+    <string name="shift_heavy_work_supporting_union">Counts one level higher on warm and hotter days. The union table times breaks on the heat number alone, so your breaks don\'t move.</string>
+    <string name="shift_started_earlier">Started earlier?</string>
+    <string name="shift_started_earlier_supporting">Set the time you actually started.</string>
+    <string name="shift_field_started">Started</string>
+    <string name="shift_field_finish">Planned finish</string>
+    <!-- Auto-end (ShiftRepository.autoEndIfOverdue): the saved end is the planned finish, or the last break or answer
+         logged after it, and the shift is closed 2 hours after that saved end.
+         Example: planned finish 15:00, nothing after it → closed at 17:00, saved as ending 15:00. With a break
+         15:40–15:55 → closed at 17:55, saved as ending 15:55. -->
+    <string name="shift_finish_supporting">If the shift is still running 2 hours after its planned finish, HeatShield ends it and saves the planned finish as its end. A break or answer logged after the planned finish counts instead: it is saved as the end, and the 2 hours count from it.</string>
+    <string name="shift_error_start_future">The start can\'t be later than now.</string>
+    <string name="shift_error_finish">Finish must be after the start and within 16 hours.</string>
+
+    <!-- Today, on shift. The since clause: %1$s is a duration ("47 min", "1 h 12 min"). -->
+    <string name="shift_since_break">%1$s since your break</string>
+    <string name="shift_since_start">%1$s since you started</string>
+    <!-- %1$s the since clause, %2$s "Hot 33°", %3$s the next-break clause -->
+    <string name="shift_status_on">%1$s · %2$s · %3$s</string>
+    <string name="shift_next_break">next break %1$s</string>
+    <string name="shift_next_scheduled">%1$s at %2$s covers your next break</string>
+    <string name="shift_next_none">no heat break due this shift</string>
+    <!-- No hours, a gap, or a stale forecast: never a time, never "none due" (Global Constraint 10) -->
+    <string name="shift_next_no_forecast">can\'t time breaks without a current forecast</string>
+    <!-- %1$s "Hot 33°", %2$s the since clause -->
+    <string name="shift_status_due">Break due · %1$s · %2$s</string>
+    <string name="shift_status_overdue">Break due %1$s ago · %2$s</string>
+    <!-- This hour is at the stop line: %1$s "Extreme 41°", %2$s the since clause -->
+    <string name="shift_status_extreme">%1$s · stop heavy work outdoors · %2$s</string>
+    <!-- Union table, adapted by HeatShield, from a heat number of 36°: %1$s "Very hot 36°", %2$s the since clause -->
+    <string name="shift_status_union_stop">%1$s · stop work outdoors · %2$s</string>
+    <!-- A stop line later in the shift: %1$s the since clause, %2$s this hour ("Hot 33°"), %3$s the time it starts -->
+    <string name="shift_status_stop_from">%1$s · %2$s · stop heavy work outdoors from %3$s</string>
+    <string name="shift_status_union_stop_from">%1$s · %2$s · stop work outdoors from %3$s</string>
+    <!-- A confirmed smoko or lunch still running: %1$s its end, %2$s this hour ("Hot 33°") -->
+    <string name="shift_status_break_until">On a break until %1$s · %2$s</string>
+    <string name="shift_union_stop_line">Stop work outdoors. The union table, adapted by HeatShield, stops from 36°.</string>
+    <!-- %1$s the first shift hour at a heat number of 36° or more -->
+    <string name="shift_union_stop_from_line">From %1$s: stop work outdoors. The union table, adapted by HeatShield, stops from 36°.</string>
+    <string name="shift_level_heat">%1$s %2$s</string>
+    <string name="shift_level_unknown">no current forecast for this hour</string>
+    <string name="shift_water">Drink a cup of water.</string>
+    <string name="shift_break_start">Start break</string>
+    <string name="shift_break_end">End break</string>
+    <string name="shift_end">End shift</string>
+    <!-- End shift asks first: the clock stops at once and a shift cannot be reopened. %1$s the time it ends -->
+    <string name="shift_end_confirm_title">End shift at %1$s?</string>
+    <string name="shift_end_confirm_body">The clock stops and the shift goes in your log. Fix times can change it later.</string>
+    <string name="shift_end_keep">Keep working</string>
+    <string name="shift_other_answer">Can\'t stop, or no shade?</string>
+    <string name="shift_details">This shift</string>
+    <!-- %1$s work, %2$s park, %3$s start time, %4$s planned finish -->
+    <string name="shift_details_line">%1$s · %2$s · started %3$s · planned finish %4$s</string>
+    <string name="shift_kind_smoko">Smoko</string>
+    <string name="shift_kind_lunch">Lunch</string>
+    <!-- A proposal (spec §4): %1$s Smoko/Lunch, %2$s the scheduled time. It counts once confirmed with Yes. -->
+    <string name="shift_proposal">%1$s at %2$s — taken?</string>
+    <string name="shift_took">Yes</string>
+    <string name="shift_not_yet">Not yet</string>
+
+    <!-- On break -->
+    <string name="shift_on_break_title">On break</string>
+    <string name="shift_on_break_resets">%1$d min resets your clock, at %2$s</string>
+    <string name="shift_on_break_reset_done">Your clock resets when you end this break</string>
+    <string name="shift_on_break_suggested">Suggested: %1$d min in the shade</string>
+    <string name="shift_on_break_unwell">You stopped because you don\'t feel right. Rest in the shade; if it gets worse, open Heat first aid.</string>
+
+    <!-- Break sheet -->
+    <string name="break_start_anyway">Start break anyway</string>
+    <!-- "Can't stop yet" while a timed break comes next: the In 10 min alarm (M3) or the panel brings it back. -->
+    <string name="break_remind">Remind me in 10 min</string>
+    <string name="break_cant_stop_hint">Nothing is added to your breaks. Break due comes back in 10 minutes, and this answer stays on today\'s shift.</string>
+    <!-- "Can't stop yet" when nothing would remind: the snooze runs into the stop line (the walk names the stop, never a break
+         past it), or nothing is timed. The button promises no reminder, and the hint names the stop. %1$s the minute it starts. -->
+    <string name="break_cant_stop_save">Save my answer</string>
+    <string name="break_cant_stop_hint_stop_now">Nothing is added to your breaks. Stop heavy work outdoors now.</string>
+    <string name="break_cant_stop_hint_stop_from">Nothing is added to your breaks. Stop heavy work outdoors from %1$s.</string>
+    <string name="break_cant_stop_hint_union_stop_now">Nothing is added to your breaks. Stop work outdoors now.</string>
+    <string name="break_cant_stop_hint_union_stop_from">Nothing is added to your breaks. Stop work outdoors from %1$s.</string>
+    <!-- A stop the walk passed in an hour that has since cooled: Today shows the break as due, and it stays due. -->
+    <string name="break_cant_stop_hint_due">Nothing is added to your breaks. Your break is still due.</string>
+    <!-- Answered early: the break is due later than the 10-minute snooze, so it keeps its own time. %1$s that time. -->
+    <string name="break_cant_stop_hint_later">Nothing is added to your breaks. Your next break is due at %1$s.</string>
+    <!-- The snooze lands within 15 minutes of a smoko or lunch, which then covers the break: %1$s Smoko/Lunch, %2$s its time. -->
+    <string name="break_cant_stop_hint_scheduled">Nothing is added to your breaks. %1$s at %2$s covers your next break.</string>
+    <!-- No current forecast, or no heat break due this shift: nothing is timed, so nothing reminds. -->
+    <string name="break_cant_stop_hint_untimed">Nothing is added to your breaks, and this answer stays on today\'s shift.</string>
+    <string name="break_unwell">I don\'t feel right</string>
+    <!-- The header once "Can't stop yet" is saved: the snoozed break's time, only while no stop comes first. -->
+    <string name="break_reminder_set">Break due again at %1$s</string>
+    <!-- Or, answered before a break was due and the snooze ends first: the next break's own time, as the panel says it. -->
+    <string name="break_reminder_next">Next break due at %1$s</string>
+    <!-- Or, when the stop line comes before that break (ShiftEvaluation.stopFrom), the stop instead, so no break time is
+         promised past it: now, or from %1$s, the minute the stop starts. -->
+    <string name="break_reminder_stop_now">Stop heavy work outdoors now</string>
+    <string name="break_reminder_stop_from">Stop heavy work outdoors from %1$s</string>
+    <string name="break_reminder_union_stop_now">Stop work outdoors now</string>
+    <string name="break_reminder_union_stop_from">Stop work outdoors from %1$s</string>
+    <string name="break_reminder_hint">Nothing was added to your breaks.</string>
+    <string name="break_no_shift">No shift running</string>
+    <string name="break_no_shift_hint">Start your shift and HeatShield counts the time since your last break.</string>
+
+    <!-- Shift summary -->
+    <string name="screen_title_summary">Shift summary</string>
+    <string name="summary_subtitle">%1$s · %2$s – %3$s</string>
+    <string name="summary_worked">%1$s worked · %2$s on breaks</string>
+    <string name="summary_peak">Peak %1$s %2$s at %3$s</string>
+    <string name="summary_peak_no_time">Peak %1$s %2$s</string>
+    <string name="summary_peak_unknown">No forecast for this shift</string>
+    <string name="summary_longest">Longest stretch without a break: %1$s</string>
+    <string name="summary_scheduled_note">Scheduled breaks count once you confirm them. In Fix times, turn on \"I took this break\" for any you took.</string>
+    <string name="summary_fix_times">Fix times</string>
+    <string name="summary_done">Done</string>
+    <string name="summary_events">What happened</string>
+    <string name="shift_auto_ended">Ended automatically at %1$s. Fix the times if that\'s wrong.</string>
+    <string name="shift_auto_ended_notice">Your shift ended automatically at %1$s. Fix the times in your log if that\'s wrong.</string>
+
+    <!-- Events, as the summary and the shift page list them -->
+    <string name="event_break">Break %1$s – %2$s</string>
+    <string name="event_break_no_shade">Break %1$s – %2$s · no shade here</string>
+    <string name="event_break_unwell">Stopped %1$s – %2$s · didn\'t feel right</string>
+    <string name="event_break_open">Break from %1$s</string>
+    <string name="event_scheduled">%1$s %2$s – %3$s · scheduled</string>
+    <!-- An unanswered or "Not yet" proposal: listed, unticked, counting nothing -->
+    <string name="event_scheduled_unconfirmed">%1$s %2$s · not confirmed</string>
+    <string name="event_cant_stop">Can\'t stop yet · %1$s</string>
+
+    <!-- Fix times -->
+    <string name="screen_title_fix_times">Fix times</string>
+    <string name="fix_group_shift">Shift</string>
+    <string name="fix_started">Started</string>
+    <string name="fix_finished">Finished</string>
+    <string name="fix_group_breaks">Breaks</string>
+    <string name="fix_break_n">Break %1$d</string>
+    <string name="fix_break_start">From</string>
+    <string name="fix_break_end">To</string>
+    <string name="fix_took_scheduled">I took this break</string>
+    <string name="fix_add_break">Add a break</string>
+    <string name="fix_remove_break">Remove</string>
+    <string name="fix_note">Note (optional)</string>
+    <string name="fix_save">Save times</string>
+    <string name="fix_saving">Saving…</string>
+    <!-- A legacy row: typed minutes, no times. Nothing is defaulted; a note saves on its own. -->
+    <string name="fix_legacy_hint">This shift was typed in. Its minutes stay until you enter both times.</string>
+    <string name="fix_heat_not_recalculated">Heat not recalculated: no forecast is saved for this shift\'s park and day.</string>
+    <string name="times_error_end_before_start">Finish must be after the start.</string>
+    <string name="times_error_too_long">A shift can\'t be longer than 16 hours.</string>
+    <string name="times_error_future">This can\'t end in the future.</string>
+    <string name="times_error_outside">A break must be inside the shift.</string>
+    <string name="times_error_overlap">Breaks can\'t overlap.</string>
+
+    <!-- Add a past shift -->
+    <string name="screen_title_add_past">Add a past shift</string>
+    <string name="log_add_past">Add a past shift</string>
+    <string name="add_past_group_when">When</string>
+    <string name="add_past_date">Date*</string>
+    <string name="add_past_started">Started*</string>
+    <string name="add_past_finished">Finished*</string>
+    <string name="add_past_choose">Choose</string>
+    <string name="add_past_save">Add to log</string>
+    <string name="add_past_hint">Pick the day and times. HeatShield works out the minutes.</string>
+
+    <!-- Log -->
+    <string name="log_chip_preview">Preview</string>
+    <string name="log_chip_manual">Added by hand</string>
+    <string name="log_chip_auto">Ended automatically</string>
+    <string name="log_status_raised">Raised</string>
+    <!-- %1$s start, %2$s finish, %3$s worked duration, %4$s break duration -->
+    <string name="log_times_line">%1$s – %2$s · %3$s worked · %4$s breaks</string>
+    <!-- Legacy rows with typed minutes and no times -->
+    <string name="log_minutes_line">%1$s outdoors · %2$s breaks</string>
+    <string name="log_fix_times">Fix times</string>
+    <string name="log_worked">Worked</string>
+    <string name="log_note">Note</string>
+    <string name="log_peak">Peak %1$s %2$s</string>
+    <string name="trends_how_preview">Preview shifts aren\'t counted.</string>
+
+    <!-- Setup and Profile -->
+    <string name="setup_field_smoko">Smoko</string>
+    <string name="setup_field_lunch">Lunch</string>
+    <string name="setup_dialog_smoko">Usual smoko</string>
+    <string name="setup_dialog_lunch">Usual lunch</string>
+    <string name="setup_scheduled_note">Smoko and lunch are proposed at these times. Only a break you confirm counts.</string>
+    <string name="profile_group_breaks">Breaks</string>
+    <string name="profile_break_rule">Break timing</string>
+    <string name="profile_break_rule_heatshield">HeatShield suggestion</string>
+    <string name="profile_break_rule_heatshield_supporting">Warm 60 min work then 10 min break, Hot 45 then 15, Very hot 30 then 15, on the heat number with your personal adjustments.</string>
+    <!-- The chip is [HeatShield rule]; VTHC is credited in the text (spec §5.10). -->
+    <string name="profile_break_rule_vthc">Union table (VTHC), adapted by HeatShield</string>
+    <string name="profile_break_rule_vthc_supporting">VTHC\'s rest-table rows (15 min an hour from 30°, 30 from 32°, 45 from 34°, stop work from 36°), applied by HeatShield to the heat number with no personal adjustments and counted as a work clock rather than rest per hour. A HeatShield adaptation, not the union\'s own rule.</string>
+
+    <!-- Preview shift -->
+    <string name="preview_shift_start">Start a preview shift</string>
+    <string name="preview_shift_start_supporting">Runs on the sensor day\'s clock. Break due shows here from that day\'s heat.</string>
+    <string name="preview_shift_blocked">End your real shift before starting a preview shift.</string>
+    <string name="preview_shift_label">Preview shift · 45× speed</string>
+    <string name="preview_shift_end">End preview shift</string>
+    <string name="preview_break_title">On break · preview</string>
+    <string name="preview_shift_saved">Preview shift saved to your log, labelled Preview.</string>
+
+    <!-- Why rows -->
+    <string name="why_next_break_rule">HeatShield counts work since your last break of 10 minutes or more, through each forecast hour\'s suggested rhythm, so rising heat or heavy work brings the next break forward. A shorter break pauses the count. Smoko or lunch within 15 minutes covers a due break. This is an app timer, not a measure of recovery.</string>
+    <!-- The cadence Why row under the union table (C09): the same rows the panel and the break sheet use. -->
+    <string name="why_cadence_union_rule">HeatShield\'s adaptation of VTHC\'s rest table, read on the peak\'s heat number with no personal adjustments: 45 min work then 15 min break from 30°, 30 then 30 from 32°, 15 then 45 from 34°, and from 36° stop work outdoors. Not the union\'s own rule.</string>
+    <string name="why_cadence_union_none">The union table has no break row below a heat number of 30°.</string>
+    <string name="why_next_break_union">HeatShield\'s adaptation of VTHC\'s rest table: the rows are read on the heat number with no personal adjustments, and HeatShield counts work since your last break of 10 minutes or more through each hour\'s row. From 36° the next step is to stop work outdoors, and nothing defers it. A shorter break pauses the count. This is an app timer, not a measure of recovery, and not the union\'s own rule.</string>
+
+    <!-- Notices -->
+    <string name="notice_shift_open">A shift is already running.</string>
+    <string name="notice_no_shift">No shift is running.</string>
+    <string name="notice_break_open">A break is already running.</string>
+    <string name="notice_no_break">No break is running.</string>
+    <string name="notice_times_invalid">Check the times.</string>
+    <string name="notice_time_future">The time can\'t be in the future.</string>
+    <string name="notice_shift_too_long">A shift can\'t be longer than 16 hours.</string>
+    <string name="notice_shift_overlaps">You already have a shift in your log at these times.</string>
+</resources>
