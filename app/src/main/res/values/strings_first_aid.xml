@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Offline heat first aid, spec section 5.14. Paraphrased, not quoted, from
+    bhc (Better Health Channel; someone unconscious and breathing goes in the recovery position),
+    st-john (St John Ambulance Australia; DRSABCD: check breathing, then recovery position or CPR;
+    heatstroke skin can be sweaty or dry; the 10-minute rule for heat exhaustion),
+    swa-2021 (Safe Work Australia, CC BY-NC 4.0), av (Ambulance Victoria)
+    and wsv-heat (WorkSafe Victoria; get help if they do not improve quickly).
+    Order follows DRSABCD:
+      1. brain or collapse signs: Call 000 now
+      2. unresponsive: open airway/check breathing; normal breathing means recovery position, abnormal means CPR
+      3. cool while help is coming, without delaying airway/breathing/CPR actions
+      4. early signs and the steps for someone awake, whose last step alone carries the 10-minute rule
+    Then Nurse-On-Call.
+-->
+<resources>
+    <!-- Navigation and launcher. The top-bar action is a word, not a bare icon. -->
+    <string name="first_aid_top_title">Heat first aid</string>
+    <string name="first_aid_top_action">First aid</string>
+    <string name="first_aid_back">Back</string>
+    <string name="first_aid_shortcut_short">Heat first aid</string>
+    <string name="first_aid_shortcut_long">Heat first aid · Call 000</string>
+
+    <!-- Card -->
+    <string name="first_aid_title">Someone\'s not right in the heat</string>
+    <string name="first_aid_check_response">Check for danger before helping. Check whether they respond.</string>
+    <string name="first_aid_call_000">Call 000</string>
+    <string name="first_aid_no_phone_app">This device can\'t open a phone app. Call 000 from any phone.</string>
+    <string name="first_aid_no_advice_phone_app">This device can\'t open a phone app. Call Nurse-On-Call on 1300 60 60 24 from another phone.</string>
+
+    <!-- 1. Brain or collapse signs: bhc heatstroke, av, st-john (skin sweaty or dry) -->
+    <string name="first_aid_call_now_heading">Call 000 now if they:</string>
+    <string-array name="first_aid_call_now_signs">
+        <item>are confused or not making sense</item>
+        <item>are slurring their words</item>
+        <item>can\'t walk straight</item>
+        <item>have collapsed or fainted</item>
+        <item>have a seizure or fit</item>
+        <item>are hard to wake or not responding</item>
+        <item>have hot, dry skin or have stopped sweating</item>
+    </string-array>
+    <string name="first_aid_still_sweating">Someone with heatstroke can still be sweating.</string>
+
+    <!-- 3. Cooling after the response/airway/breathing branch: st-john, swa-2021, bhc -->
+    <string name="first_aid_while_you_wait">Cool them now while you wait. Don\'t leave them alone.</string>
+    <string-array name="first_aid_cooling_steps">
+        <item>Get them into shade or somewhere cool.</item>
+        <item>Strip off extra layers, including PPE.</item>
+        <item>Soak their skin with cool water and fan them without stopping.</item>
+        <item>Put cold packs or wrapped ice on the neck, armpits and groin.</item>
+    </string-array>
+
+    <!-- 2. st-john DRSABCD: assess airway and breathing before detailed cooling. Breathing normally: recovery position (bhc) and keep watching.
+         Not breathing normally: CPR, which the 000 call-taker coaches. -->
+    <string name="first_aid_unresponsive_heading">If they don\'t respond:</string>
+    <string-array name="first_aid_unresponsive_steps">
+        <item>Open their airway and check whether they are breathing normally.</item>
+        <item>Breathing normally: put them on their side and keep watching their breathing.</item>
+        <item>Not breathing normally: start CPR, ask someone to bring a defibrillator, and follow the 000 call-taker.</item>
+    </string-array>
+
+    <!-- 4. Heat exhaustion in someone awake: bhc, st-john, wsv-heat -->
+    <string name="first_aid_early_signs_heading">Early signs</string>
+    <string-array name="first_aid_early_signs">
+        <item>heavy sweating, pale or clammy skin</item>
+        <item>dizzy, faint or a headache</item>
+        <item>weak or can\'t keep going</item>
+        <item>cramps in the arms, legs or belly</item>
+        <item>feeling sick or vomiting</item>
+        <item>very thirsty or irritable</item>
+    </string-array>
+
+    <!-- Steps for someone awake: st-john, swa-2021, bhc (side position if drowsy or vomiting).
+         Step 5 is the st-john 10-minute rule, the only place it appears; wsv-heat: call sooner if they get worse. -->
+    <string name="first_aid_steps_heading">Do this now</string>
+    <string name="first_aid_steps_subtitle">If they\'re awake and making sense.</string>
+    <string-array name="first_aid_steps">
+        <item>Stop work. Move them into shade or somewhere cool.</item>
+        <item>Lie them down. If they feel faint, raise their legs a little. If they\'re drowsy or vomiting, put them on their side.</item>
+        <item>Loosen or take off extra clothing, including PPE. Wet their skin with cool water and fan them.</item>
+        <item>If they are fully awake and can swallow, give sips of cool water.</item>
+        <item>Getting worse, or not better within 10 minutes? Call 000.</item>
+    </string-array>
+
+    <!-- Footer: wsv-heat and banyule (stop whatever the temperature), bhc (Nurse-On-Call) -->
+    <string name="first_aid_stop_work">Anyone with these signs stops work, whatever the temperature.</string>
+    <string name="first_aid_nurse_on_call">Unwell but not an emergency? Nurse-On-Call gives health advice any time, day or night, on 1300 60 60 24.</string>
+    <string name="first_aid_nurse_button">Call Nurse-On-Call</string>
+    <string name="first_aid_team_leader">Tell your team leader what happened.</string>
+    <string name="first_aid_attribution">Paraphrased from Better Health Channel, St John Ambulance Australia, Safe Work Australia (CC BY-NC 4.0) and Ambulance Victoria.</string>
+    <string name="first_aid_disclaimer">Not a substitute for first aid training.</string>
+</resources>

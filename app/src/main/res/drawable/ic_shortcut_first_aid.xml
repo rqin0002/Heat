@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shortcut icon: a white cross on Emergency red (@color/first_aid_shortcut, LIGHT_EMERGENCY), the colour kept for Call 000. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="@color/first_aid_shortcut"
+        android:pathData="M24,2 A22,22 0 1,1 24,46 A22,22 0 1,1 24,2 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,13 L28,13 L28,20 L35,20 L35,28 L28,28 L28,35 L20,35 L20,28 L13,28 L13,20 L20,20 Z" />
+</vector>

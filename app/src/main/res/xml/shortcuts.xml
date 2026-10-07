@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher long-press. targetPackage is the applicationId; targetClass is the launcher activity. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="first_aid"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_first_aid"
+        android:shortcutShortLabel="@string/first_aid_shortcut_short"
+        android:shortcutLongLabel="@string/first_aid_shortcut_long">
+        <intent
+            android:action="heatshield.action.FIRST_AID"
+            android:targetPackage="au.edu.monash.heatshield"
+            android:targetClass="heatshield.MainActivity" />
+    </shortcut>
+</shortcuts>
