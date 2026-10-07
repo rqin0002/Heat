@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="preview_title">Preview a hot day</string>
+    <string name="preview_banner">PREVIEW · recorded %1$s · not today</string>
+    <string name="preview_sensor_chip">Reading at %1$s · %2$.1f° · %3$.0f%% humidity</string>
+    <string name="preview_sensor_chip_description">Sensor reading at %1$s: %2$.1f degrees, %3$.0f percent humidity</string>
+    <string name="preview_eyebrow">%1$s · %2$s</string>
+    <string name="preview_caption">Birrarung Marr street sensor</string>
+    <string name="preview_level_qualifier">for you</string>
+    <string name="preview_numeral_feels">feels like in still air · sensor air %1$s</string>
+    <string name="preview_numeral_air">sensor air</string>
+    <string name="preview_extreme">Stop heavy work outdoors. Check your crew\'s hot-day rule.</string>
+    <string name="preview_extreme_keep_working">If your crew keeps working, take breaks in the shade and follow your crew\'s rule.</string>
+    <!-- Preview crew advice counts whole sensor hours intersecting the usual working day. -->
+    <string name="preview_crew_hours">the hours covering your usual day (%1$s–%2$s)</string>
+    <string name="preview_crew_usual_hours">the hours covering your usual day</string>
+    <string name="preview_crew_passed">Within %3$s, sensor passed %1$s at %2$s.</string>
+    <string name="preview_crew_under">Within %2$s, readings so far are under your %1$s rule.</string>
+    <!-- Completed practice shifts stay available until saving succeeds. -->
+    <string name="preview_saving">Saving your preview shift…</string>
+    <string name="preview_save_pending">Your preview shift has ended. Save it to keep it in your log.</string>
+    <string name="preview_save_retry">Retry save</string>
+    <string name="preview_speed_note">One reading every 20 seconds, 45 times faster than the real day.</string>
+    <string name="preview_next">Next reading</string>
+    <string name="preview_exit">Exit preview</string>
+    <string name="preview_loading">Loading the sensor day…</string>
+    <string name="preview_unavailable">The sensor day could not be read. Exit and try again.</string>
+    <string name="preview_credit">City of Melbourne microclimate sensor, Birrarung Marr, CC BY 4.0. The sensor has no wind data, so still air is assumed.</string>
+</resources>
