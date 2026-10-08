@@ -1,15 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <application android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@drawable/heatshield_icon" android:label="HeatShield" android:supportsRtl="true" android:theme="@style/Theme.HeatShield">
-        <receiver android:name="heatshield.background.ReminderReceiver" android:exported="false" />
+    <!-- M3: alarms restored on boot; precise break-due timing when the user allows it (Settings › Alarms & reminders).
+         Deliberately absent: FOREGROUND_SERVICE*, USE_EXACT_ALARM, SYSTEM_ALERT_WINDOW (spec §9, §10 M3). -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- work-runtime declares FOREGROUND_SERVICE for a foreground service HeatShield never starts (no expedited work below
+         API 31, no setForeground); the merger drops it so the installed manifest matches the spec. See the M3 plan, Task 1. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+    <application android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:label="HeatShield" android:supportsRtl="true" android:theme="@style/Theme.HeatShield">
+        <!-- M3 alarms and notification actions (PendingIntents only), and the system broadcasts that invalidate armed alarms.
+             SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED arrives on grant only; a revocation stops the app and drops its exact
+             alarms, and the next reconcile trigger rebuilds the inexact pair (Global Constraint 6). -->
+        <receiver android:name="heatshield.background.AlertReceiver" android:exported="false" />
+        <receiver android:name="heatshield.background.ShiftActionReceiver" android:exported="false" />
+        <receiver android:name="heatshield.background.ReconcileReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
         <activity android:name="heatshield.MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
     </application>
 </manifest>
