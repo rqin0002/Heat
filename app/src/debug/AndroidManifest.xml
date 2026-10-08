@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application android:networkSecurityConfig="@xml/emulator_network_security" />
+    <application android:networkSecurityConfig="@xml/emulator_network_security">
+        <!-- The adb shell holds DUMP; ordinary apps cannot request this data-changing demo without a privileged grant. -->
+        <receiver android:name="heatshield.debug.DemoDataReceiver" android:exported="true" android:permission="android.permission.DUMP">
+            <intent-filter><action android:name="heatshield.debug.DEMO_DATA" /></intent-filter>
+        </receiver>
+    </application>
 </manifest>
