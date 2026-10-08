@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- M3: lock-screen alerts. Verb first, numbers first, sentence case, no exclamation marks. Stored values (alert, break_due,
+     repeat, the alarm kinds, the quiet reasons) never appear; these are their words. Inexact alarms can post late, so
+     nothing here says "now" or "starts now" (Global Constraint 5). -->
+<resources>
+    <!-- Channels, as Android's notification settings list them -->
+    <string name="channel_status">Shift timer</string>
+    <string name="channel_status_description">The silent timer while you\'re on shift.</string>
+    <string name="channel_break_due">Break due</string>
+    <string name="channel_break_due_description">A buzz with the numbers when heat and time say a break is due.</string>
+    <string name="channel_outlook">Hot-day notices</string>
+    <string name="channel_outlook_description">A nudge before a hot shift, and a check if you forget to end one.</string>
+
+    <!-- Ongoing timer. %1$s is "Hot 33°" (shift_level_heat). -->
+    <string name="ongoing_title_on">On shift · %1$s</string>
+    <string name="ongoing_title_on_no_heat">On shift</string>
+    <string name="ongoing_title_due">Break due · %1$s</string>
+    <string name="ongoing_title_due_no_heat">Break due</string>
+    <!-- The stop line, judged on this hour's heat (AlertRules.stopNow); the body line is Today's own (today_extreme_now / shift_union_stop_line).
+         Titles are shared by the ongoing timer and the break-due (stop) alert. %1$s is "Extreme 39°" / "Very hot 36°". -->
+    <string name="alert_stop_title">Stop heavy work outdoors · %1$s</string>
+    <string name="alert_union_stop_title">Stop work outdoors · %1$s</string>
+    <!-- A stop the walk reaches ahead: a time, never a current instruction. %1$s its time -->
+    <string name="ongoing_text_stop_from">From %1$s: stop heavy work outdoors</string>
+    <string name="ongoing_text_union_stop_from">From %1$s: stop work outdoors</string>
+    <string name="ongoing_text_next">Next break %1$s</string>
+    <!-- %1$s Smoko/Lunch, %2$s its time -->
+    <string name="ongoing_text_scheduled">%1$s at %2$s covers your next break</string>
+    <!-- As Today's panel words them (shift_next_none, shift_next_no_forecast): a night shift crosses midnight, and a stale forecast times nothing. -->
+    <string name="ongoing_text_none">No heat break due this shift</string>
+    <string name="ongoing_text_no_forecast">No current forecast · take your usual breaks</string>
+    <!-- A confirmed smoko or lunch still running (shift_status_break_until): %1$s its end, when the clock resets -->
+    <string name="ongoing_text_break_until">On a break until %1$s · your clock resets then</string>
+    <!-- The chronometer beside these counts the minutes, so they name none: a count written here would stand still. -->
+    <string name="ongoing_text_due">Tap Start break</string>
+    <!-- %1$s the due time; the title already says "Break due" -->
+    <string name="ongoing_text_overdue">Due since %1$s · tap Start break</string>
+    <string name="ongoing_break_title">On break</string>
+    <string name="ongoing_break_resets">%1$d min resets your clock, at %2$s</string>
+    <string name="ongoing_break_reset_done">Your clock resets when you end this break</string>
+
+    <!-- Break due. %1$s is "Hot 33°". -->
+    <string name="alert_break_title">Break due · %1$s</string>
+    <string name="alert_break_title_no_heat">Break due · %1$s</string>
+    <string name="alert_break_since">%1$s since your break.</string>
+    <string name="alert_break_since_start">%1$s since you started.</string>
+    <string name="alert_break_due_since">Due since %1$s.</string>
+    <!-- A break that waited for a smoko or lunch, which was not answered by its time. %1$s Smoko/Lunch, %2$s its time -->
+    <string name="alert_scheduled_unconfirmed">%1$s at %2$s isn\'t confirmed.</string>
+    <!-- A stop line coming within the snooze's ten minutes: the alert offers no In 10 min and names it. %1$s its time -->
+    <string name="alert_stop_from">From %1$s: stop heavy work outdoors.</string>
+    <string name="alert_union_stop_from">From %1$s: stop work outdoors.</string>
+    <string name="alert_check_mate">Check on your mate.</string>
+    <!-- %1$s the crew rule, e.g. 35° -->
+    <string name="alert_over_rule">Air over your %1$s rule this hour.</string>
+    <string name="alert_action_snooze">In 10 min</string>
+    <string name="alert_action_unwell">Unwell</string>
+    <!-- Sub-text on the single two-minute repeat of an unanswered alert -->
+    <string name="alert_repeat_label">Asked again</string>
+    <string name="alert_preview_prefix">Preview · %1$s</string>
+
+    <!-- Hot-day start nudge. %1$s peak heat, %2$s its time, %3$s level word, %4$s crew rule, %5$s first hour over it -->
+    <string name="nudge_title">Hot day at %1$s</string>
+    <string name="nudge_text">%1$s by %2$s (%3$s). Start your shift when you clock on.</string>
+    <string name="nudge_text_rule">%1$s by %2$s (%3$s). Air forecast to reach %4$s from %5$s. Start your shift when you clock on.</string>
+    <!-- %1$s level word, when no peak hour is known -->
+    <string name="nudge_text_no_peak">%1$s day forecast. Start your shift when you clock on.</string>
+
+    <!-- Still on shift? and the automatic end -->
+    <string name="overrun_title">Still on shift?</string>
+    <!-- %1$s the finish the shift is set to: the one picked at Start shift, or the time "Still working" was last tapped -->
+    <string name="overrun_text">Your shift was set to finish at %1$s. End your shift, or keep going.</string>
+    <string name="overrun_action_still_working">Still working</string>
+    <string name="auto_ended_title">Shift ended automatically</string>
+    <!-- %1$s the stored end. The first only when it is the planned finish; the automatic end can be a later break or answer (ShiftRules.autoEndAt). -->
+    <string name="auto_ended_text">Your shift ended at %1$s, your planned finish. Fix the times in your log if that\'s wrong.</string>
+    <string name="auto_ended_text_at">Your shift ended at %1$s. Fix the times in your log if that\'s wrong.</string>
+
+    <!-- Alerts intro, at the first Start shift (Task 7) -->
+    <string name="app_name_short">HeatShield</string>
+    <string name="screen_title_alerts">Break alerts</string>
+    <string name="alerts_intro_text">On shift, HeatShield counts the time since your last break. When heat and time say a break is due, your phone buzzes once with the numbers, and once more if nothing is answered. One tap starts the break.</string>
+    <string name="alerts_intro_preview_label">What the alert looks like</string>
+    <string name="alerts_intro_sample_title">Break due · Hot 33°</string>
+    <string name="alerts_intro_sample_text">47 min since your break. Drink a cup of water.</string>
+    <!-- The nudge is an inexact alarm, so no copy names its lead time (Global Constraint 5). -->
+    <string name="alerts_intro_also">Also a nudge before your usual start on hot days, and a check if you forget to end your shift. No buzz at Normal.</string>
+    <string name="alerts_intro_allow">Turn on break alerts</string>
+    <string name="alerts_intro_not_now">Not now</string>
+    <string name="alerts_intro_denied">Alerts stay off. Your timer still runs on Today; turn alerts on in Profile any time.</string>
+
+    <!-- Profile › Alerts and the Today banner (Task 7) -->
+    <string name="profile_alerts_switch">Break-due alerts</string>
+    <string name="profile_alerts_switch_supporting">The shift timer on your lock screen, a buzz with the level, °C and minutes since your break when a break is due, a nudge before your usual start on hot days, and a check if you forget to end your shift.</string>
+    <string name="alerts_row_notifications_on">Notifications: allowed</string>
+    <string name="alerts_row_notifications_off">Notifications: blocked for HeatShield. Your timer still runs on Today.</string>
+    <string name="alerts_row_exact_on">Precise timing: on</string>
+    <!-- No delay bound: Doze can hold an inexact alarm past the window asked for (Global Constraint 5). -->
+    <string name="alerts_row_exact_off">Precise timing: off. Alerts can arrive late.</string>
+    <string name="alerts_row_channel_silent">Break due alerts are set to silent in Android settings.</string>
+    <string name="alerts_action_allow_notifications">Allow notifications</string>
+    <string name="alerts_action_allow_exact">Allow precise timing</string>
+    <string name="alerts_action_channel">Open alert settings</string>
+    <string name="alerts_banner_blocked">Alerts are blocked for HeatShield. Your timer still runs here.</string>
+    <string name="alerts_banner_settings">Open settings</string>
+    <string name="today_show_timer">Show timer again</string>
+
+    <!-- Shift timeline rows (Task 2). %1$s level word, %2$s heat ("33°"), %3$s time -->
+    <string name="event_alert">Break due alert · %1$s %2$s · %3$s</string>
+    <string name="event_alert_repeat">Break due alert repeated · %1$s %2$s · %3$s</string>
+</resources>
