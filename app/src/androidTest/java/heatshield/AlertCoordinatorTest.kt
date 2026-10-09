@@ -52,7 +52,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** reconcile() from Room: alarms follow the shift, the ongoing timer follows the shift, a reboot re-arms from wall time, an owner switch or sign-out mid-read leaves the old owner nothing (spec §10 M3). */
+/** reconcile() from Room: alarms follow the shift, the ongoing timer follows the shift, a reboot re-arms from wall time, an owner switch or sign-out mid-read leaves the old owner nothing . */
 @RunWith(AndroidJUnit4::class)
 class AlertCoordinatorTest {
     private class FakeShiftClock(var wall: Long, var elapsed: Long, var boot: Int) : ShiftClock {
@@ -252,7 +252,7 @@ class AlertCoordinatorTest {
     @Test
     fun aStaleForecastArmsNoBreakAlarmAndTheTimerSaysSo() = runBlocking {
         assumeTrue("The test AVD allows HeatShield notifications (README preconditions).", notifications.notificationsAllowed())
-        seedForecast(airC = 33.0, ageMinutes = 7 * 60)          // a 7-hour-old Hot forecast is unknown, not a cadence (spec §5.13)
+        seedForecast(airC = 33.0, ageMinutes = 7 * 60)          // a 7-hour-old Hot forecast is unknown, not a cadence 
         val id = shifts.startShift(owner, input(heavy = false))
         clock.advanceMinutes(45)                                  // 7:47 would be due on a current Hot forecast
         val plan = requireNotNull(coordinator.reconcile())
@@ -374,8 +374,8 @@ class AlertCoordinatorTest {
         coordinator.onAlarm(owner, AlarmKind.BREAK_DUE, id, i(t(7, 57)).toEpochMilli())
         assertTrue(shows(ShiftNotifications.ID_BREAK_DUE))
         assertEquals(listOf(AlertReason.BREAK_DUE, AlertReason.BREAK_DUE), events(id).filter { it.type == ShiftEventType.ALERT }.map { it.reason })
-        // The re-ask offers no "In 10 min": a second answer reaches the cap, and its fire would stay silent (spec §8: no promise
-        // the app does not keep). Start break and Unwell stay; the sheet the body opens still takes a second answer.
+        // The re-ask offers no "In 10 min": a second answer reaches the cap, and its fire would stay silent
+        // Start break and Unwell stay; the sheet the body opens still takes a second answer.
         assertEquals(listOf("Start break", "Unwell"), shown(ShiftNotifications.ID_BREAK_DUE).actions.map { it.title.toString() })
         coordinator.onAction(owner, AlertAction.SNOOZE, id)
         assertEquals(2, events(id).count { it.type == ShiftEventType.CANT_STOP })
@@ -440,7 +440,7 @@ class AlertCoordinatorTest {
     }
 
     /**
-     * "Still working" on the "Still on shift?" check (spec §4): the confirmed time becomes the shift's planned finish, so the
+     * "Still working" on the "Still on shift?" check: the confirmed time becomes the shift's planned finish, so the
      * next check comes 30 minutes after it and the automatic end two hours after it, and a shift then forgotten ends at the
      * last confirmed time, keeping the overtime just confirmed. The check itself posts only once the planned finish passed.
      */
@@ -479,7 +479,7 @@ class AlertCoordinatorTest {
     }
 
     /**
-     * The hot-day start nudge's fire (spec §10 M3), decided again from Room: it posts only on a Hot day or hotter, on a current
+     * The hot-day start nudge's fire , decided again from Room: it posts only on a Hot day or hotter, on a current
      * forecast, with no shift open and none tracked that day; the site and the peak are in it.
      */
     @Test

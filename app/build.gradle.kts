@@ -56,7 +56,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-    // JVM tests of AlarmManager, NotificationManager and the receivers (M3). Pinned to SDK 35 in src/test/resources/robolectric.properties.
+    // JVM tests of AlarmManager, NotificationManager and the receivers. Pinned to SDK 35 in src/test/resources/robolectric.properties.
     testImplementation("org.robolectric:robolectric:4.16")
     testImplementation("androidx.test:core:1.7.0")
     testImplementation("androidx.test.ext:junit:1.3.0")
