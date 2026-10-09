@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Task 13: navigation and titles -->
+    <string name="tab_today">Today</string>
+    <string name="tab_log">Log</string>
+    <string name="tab_trends">Trends</string>
+    <string name="tab_profile">Profile</string>
+    <string name="screen_title_app">HeatShield</string>
+    <string name="screen_title_sign_in">Sign in</string>
+    <string name="screen_title_signup">Create account</string>
+    <!-- One name for the planner in both steps; the screen's step caption says which step. -->
+    <string name="screen_title_plan">Plan</string>
+    <string name="screen_title_compare">Plan</string>
+    <string name="screen_title_break">Break</string>
+    <string name="screen_title_search">Search log</string>
+    <string name="screen_title_shift">Shift</string>
+    <string name="top_bar_back">Back</string>
+    <!-- The one "gone" message, shown by the screen and raised by the view model. -->
+    <string name="log_entry_gone">This shift is no longer in your log.</string>
+    <string name="log_back_to_log">Back to log</string>
+
+    <!-- Task 13: Log, search, shift detail and edit. An entry in the Log is always a shift. -->
+    <string name="log_search">Search</string>
+    <string name="log_sort_newest">Newest first</string>
+    <string name="log_sort_longest">Longest outdoors</string>
+    <string name="log_sort_description">Sort results: %s</string>
+    <string name="log_empty_title">Nothing in your log yet</string>
+    <string name="log_empty_body">Start a shift on Today, or add a past shift, to begin your log of work and breaks.</string>
+    <plurals name="log_shift_count">
+        <item quantity="one">%d shift</item>
+        <item quantity="other">%d shifts</item>
+    </plurals>
+    <string name="log_place_date">%1$s · %2$s</string>
+    <string name="log_search_label">Work type, park or note</string>
+    <string name="log_search_placeholder">Birrarung Marr</string>
+    <string name="log_search_clear">Clear search</string>
+    <string name="log_filters">Filters</string>
+    <string name="log_filters_active">Filters (%d)</string>
+    <string name="log_filter_work_type">Work type</string>
+    <string name="log_filter_all_work">All work</string>
+    <string name="log_filter_all_statuses">All statuses</string>
+    <string name="log_filter_any_date">Any date</string>
+    <string name="log_filter_clear_date">Clear date filter</string>
+    <plurals name="log_result_count">
+        <item quantity="one">%d result</item>
+        <item quantity="other">%d results</item>
+    </plurals>
+    <string name="log_reset">Reset</string>
+    <string name="log_no_match_title">No matching shifts</string>
+    <string name="log_no_match_body">Try another work type or date, or reset the filters.</string>
+    <string name="log_follow_up">Follow-up</string>
+    <!-- Display labels for the stored status values "to_raise" and "none" (ShiftStatus); "raised" is log_status_raised
+         in strings_shift.xml. Nobody reviews a shift. -->
+    <string name="log_status_to_raise">To raise</string>
+    <string name="log_status_nothing">Nothing to raise</string>
+    <string name="log_breaks">Breaks</string>
+    <string name="log_latest_note">Latest note</string>
+    <string name="log_raise_hint">Something to raise with your team leader.</string>
+    <string name="log_delete">Delete shift</string>
+    <string name="log_delete_title">Delete this shift?</string>
+    <string name="log_delete_body">Remove %1$s at %2$s on %3$s from your log and trends?</string>
+    <string name="log_keep">Keep shift</string>
+    <!-- Add a past shift: the date and both times start empty, so only they carry an asterisk. -->
+    <string name="log_required_legend">* required</string>
+    <string name="log_field_work_type">Work type</string>
+    <string name="log_field_park">Park</string>
+    <string name="log_saving">Saving…</string>
+    <string name="log_use_date">Use date</string>
+    <string name="log_cancel">Cancel</string>
+
+    <!-- Task 13: Trends -->
+    <plurals name="trends_shifts_in_view">
+        <item quantity="one">%1$d shift · %2$s</item>
+        <item quantity="other">%1$d shifts · %2$s</item>
+    </plurals>
+    <string name="trends_outdoor_minutes">Outdoor minutes</string>
+    <string name="trends_break_minutes">Break minutes</string>
+    <string name="trends_by_day">By day</string>
+    <string name="trends_by_week">By week</string>
+    <string name="trends_minutes_by_day">Minutes by day</string>
+    <string name="trends_minutes_by_week">Minutes by week</string>
+    <string name="trends_empty_title">No shifts in this view</string>
+    <string name="trends_empty_body">Choose another work type or add a shift to your log.</string>
+    <string name="trends_week_of">Week of %s</string>
+    <string name="trends_group_minutes">Outdoor work %1$d min · Logged breaks %2$d min</string>
+    <plurals name="trends_shifts_logged">
+        <item quantity="one">%d shift logged</item>
+        <item quantity="other">%d shifts logged</item>
+    </plurals>
+    <string name="trends_data_values">Data values</string>
+    <string name="trends_how_title">How totals work</string>
+    <string name="trends_how_updates">Totals update when your log changes. Weeks start on Monday.</string>
+    <string name="trends_how_scale">Both bars use the same minutes scale.</string>
+    <string name="trends_legend_outdoor">Outdoor work</string>
+    <string name="trends_legend_breaks">Breaks</string>
+    <string name="trends_chart_description">Outdoor work and breaks in minutes. Pick a date below or open Data values.</string>
+    <string name="trends_chart_day">%1$s: outdoor work %2$d min, breaks %3$d min</string>
+
+    <!-- Task 13: shift plan (S04, until M4 replaces it). Every field starts filled in (the pickers, and the
+         time dialog's hour and minute), so no label has an asterisk and the form has no "* required" legend. -->
+    <string name="shift_plan_step_details">Step 1 of 2 · Your day</string>
+    <string name="shift_plan_step_compare">Step 2 of 2 · Compare and choose</string>
+    <string name="shift_plan_when_where">When and where</string>
+    <string name="shift_plan_date">Work date · %s</string>
+    <string name="shift_plan_hours">Shift hours · %1$s – %2$s</string>
+    <string name="shift_plan_park">Park</string>
+    <string name="shift_plan_work_details">Work details</string>
+    <!-- Setup's work picker, relabelled: each option names the effort it implies, so Plan asks no Effort question. -->
+    <string name="shift_plan_work_type">Work type</string>
+    <string name="shift_plan_clothing">Protective clothing</string>
+    <string name="shift_plan_summary">%1$s · %2$s</string>
+    <string name="shift_plan_window_time">%1$s–%2$s</string>
+    <string name="shift_plan_compare">Compare work windows</string>
+    <string name="shift_plan_none_title">No comparison available</string>
+    <string name="shift_plan_loading">Getting the park\'s forecast…</string>
+    <string name="shift_plan_none_body">Comparing needs a fresh forecast that covers two hours of your shift on that date. Choose a later date or retry the forecast.</string>
+    <string name="shift_plan_refreshing">Refreshing…</string>
+    <string name="shift_plan_retry">Retry forecast</string>
+    <string name="shift_plan_change_day">Change your day</string>
+    <string name="shift_plan_return_today">Return to Today</string>
+    <string name="shift_plan_chart_title">Air temperature</string>
+    <string name="shift_plan_chart_source">Open-Meteo · %s · °C</string>
+    <string name="shift_plan_ranking">The first window has the least forecast heat for your work.</string>
+    <string name="shift_plan_save">Save this window</string>
+    <string name="shift_plan_apply_date">Apply date</string>
+    <string name="shift_plan_cancel">Cancel</string>
+    <string name="shift_plan_start_title">Shift start</string>
+    <string name="shift_plan_hour_field">Hour (0–%d)</string>
+    <string name="shift_plan_minute_field">Minute (0–59)</string>
+    <string name="shift_plan_apply_time">Apply time</string>
+    <string name="shift_plan_start_limit">Your shift ends at %1$s. Start by %2$s.</string>
+    <string name="shift_plan_chart_range">%1$.1f–%2$.1f°C</string>
+    <string name="shift_plan_chart_hour">%1$s: %2$.1f degrees</string>
+
+    <!-- Task 13: break check-in (S10). M2 Task 6 rebuilt it as the break sheet over the shift; the sheet's own
+         strings (Off shift, reminder, On break, I don't feel right) are in strings_shift.xml. -->
+    <string name="break_check_return">Return to Today</string>
+    <string name="break_check_prompt">Time for a break in the shade?</string>
+    <string name="break_check_answer_shade">Yes, there\'s shade nearby</string>
+    <string name="break_check_answer_no_shade">No shade here</string>
+    <string name="break_check_answer_cant_stop">Can\'t stop yet</string>
+    <string name="break_check_shade_hint">Move into the shade, sit down and drink a cup of water.</string>
+    <string name="break_check_raise_hint">That\'s a normal answer. It stays on your log so you can raise it with your team leader. If you or a mate feel unwell, stop now and open Heat first aid.</string>
+    <string name="break_check_start">Start break</string>
+
+    <!-- Task 13: sign in and create account. "Sign in", as on Welcome and Profile; "Log" is the tab.
+         auth_unavailable is Task 10's one accounts-unavailable message, reused here and not defined again. -->
+    <string name="auth_log_in">Sign in</string>
+    <!-- M1 keeps each account's log separate from the one on this phone; nothing moves between them yet. -->
+    <string name="auth_log_in_subtitle">Signing in uses a separate log from the one on this phone.</string>
+    <string name="auth_please_wait">Please wait…</string>
+    <string name="auth_forgot_password">Forgot password?</string>
+    <string name="auth_create_account">Create account</string>
+    <string name="auth_create_account_subtitle">A new account starts its own log. Moving this phone\'s log into it comes later.</string>
+    <string name="auth_creating_account">Creating account…</string>
+    <string name="auth_your_account">Your account</string>
+    <string name="auth_required_legend">* required</string>
+    <string name="auth_reset_title">Reset password</string>
+    <string name="auth_reset_body">Enter the email you signed up with. If there\'s an account for it, a reset link will arrive by email.</string>
+    <string name="auth_send_reset">Send reset email</string>
+    <string name="auth_cancel">Cancel</string>
+    <string name="auth_error_email">Enter a valid email address.</string>
+    <string name="auth_error_password">Enter your password.</string>
+    <string name="auth_password_rule">Use at least 12 characters.</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_email_required">Email*</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_password_required">Password*</string>
+    <string name="auth_show_password">Show password</string>
+    <string name="auth_hide_password">Hide password</string>
+
+    <!-- Task 13: messages raised by the view model. notice_unknown_park (Task 8) and notice_save_failed
+         (Task 10) already exist and are reused, not defined again. -->
+    <string name="notice_sign_in_failed">Couldn\'t sign in. Check your email and password, then try again.</string>
+    <string name="notice_reset_sent">If there\'s an account for that email, a reset link is on its way.</string>
+    <string name="notice_reset_failed">Couldn\'t send a reset email. Try again.</string>
+    <string name="notice_plan_changed">The forecast changed. Refresh and compare again.</string>
+    <string name="notice_forecast_not_saved">Couldn\'t save the forecast. Free up some space on your phone, then retry.</string>
+    <string name="notice_parks_bundled">Parks saved in the app</string>
+    <string name="notice_parks_shared">Shared park list loaded</string>
+    <!-- Any failed park-list refresh. The repository's own reason is not shown: it repeats this and is not crew language. -->
+    <string name="notice_parks_fallback">Couldn\'t update the park list. Using the parks saved in the app.</string>
+</resources>
